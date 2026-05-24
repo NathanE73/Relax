@@ -10,6 +10,8 @@ RELAX_EXECUTABLE=relax
 VERSION_FILE=.version
 VERSION_STRING=$(shell cat "$(VERSION_FILE)")
 
+.PHONY: examples
+
 default:
 
 bootstrap:
@@ -43,6 +45,9 @@ format:
 
 lint:
 	mint run swiftlint
+
+examples:
+	bin/make-examples.sh
 
 %:
 	@:

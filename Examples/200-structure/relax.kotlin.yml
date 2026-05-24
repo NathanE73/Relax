@@ -1,0 +1,9 @@
+input:
+- document.yml
+
+output: Generated/Kotlin
+
+namespaces:
+- namespace: com.example.backend
+  structures:
+    - schema: User

@@ -1,0 +1,9 @@
+input:
+- document.yml
+
+output: Generated/Swift
+
+namespaces:
+- namespace: Backend
+  enumerations:
+    - schema: OrderStatus

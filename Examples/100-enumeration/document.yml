@@ -1,0 +1,14 @@
+openapi: 3.1.0
+info:
+  title: Example API
+  version: 1.0.0
+
+components:
+  schemas:
+    OrderStatus:
+      type: string
+      enum:
+        - placed
+        - processing
+        - shipped
+        - delivered
