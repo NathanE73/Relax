@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: Example API
+  version: 1.0.0
+
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        petType:
+          type: string
+      discriminator:
+        propertyName: petType
+        mapping:
+          cat: '#/components/schemas/Cat'
+          dog: '#/components/schemas/Dog'
+      oneOf:
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Dog'
+    Cat:
+      type: object
+      properties:
+        petType:
+          type: string
+          enum: [cat]
+        name:
+          type: string
+        meow:
+          type: boolean
+        lives:
+          type: integer
+    Dog:
+      type: object
+      properties:
+        petType:
+          type: string
+          enum: [dog]
+        name:
+          type: string
+        bark:
+          type: boolean
+        breed:
+          type: string

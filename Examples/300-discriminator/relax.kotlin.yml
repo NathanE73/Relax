@@ -1,0 +1,16 @@
+input:
+- document.yml
+
+output: Generated/Kotlin
+
+namespaces:
+- namespace: com.example.backend
+  discriminators:
+    - name: Pet
+      property:
+        name: petType
+      mapping:
+        - value: Cat
+          schema: Cat
+        - value: Dog
+          schema: Dog
