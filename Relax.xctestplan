@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "A678B7BB-C08D-4570-A5E2-40596BE0F193",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:",
+      "identifier" : "relax",
+      "name" : "relax"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "RelaxFrameworkTests",
+        "name" : "RelaxFrameworkTests"
+      }
+    }
+  ],
+  "version" : 1
+}

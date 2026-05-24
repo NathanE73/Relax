@@ -1,0 +1,129 @@
+//
+// Copyright (c) 2026 Nathan E. Walczak
+//
+// MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+
+import Foundation
+
+extension Component {
+    struct Discriminator: FullyQualifiedName {
+        var existing: Bool
+
+        var schemaName: String?
+        var namespace: String?
+        var name: String
+        var codable: CodableProtocol?
+
+        var discriminatorProperty: DiscriminatorProperty
+        var mapping: [Mapping]
+        var enumeration: Component.Enumeration
+
+        struct DiscriminatorProperty {
+            var name: String
+            var type: String
+        }
+
+        struct Mapping {
+            var value: String
+            var schema: String
+            var name: String
+        }
+
+        var mappingSchemas: Set<String> {
+            Set(mapping.map(\.schema))
+        }
+    }
+}
+
+extension [Component.Discriminator] {
+    // TODO: child namespace, sibling namespace, ...
+    func firstWith(
+        namespace: String?,
+        discriminatorPropertyName: String,
+        structureNames: Set<String>
+    ) -> Element? {
+        // matching discriminator property name
+        let matchingDiscriminatorPropertyName = filter {
+            $0.discriminatorProperty.name == discriminatorPropertyName
+        }
+
+        // matching on namespace with exact cases
+        if let namespace, let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace == namespace &&
+                $0.mappingSchemas == structureNames
+        }.only) {
+            return result
+        }
+
+        // matching on namespace with superset of cases
+        if let namespace, let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace == namespace &&
+                $0.mappingSchemas.isSuperset(of: structureNames)
+        }.only) {
+            return result
+        }
+
+        // matching on child namespace with superset of cases
+        if let namespace, let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace?.starts(with: "\(namespace).") == true &&
+                $0.mappingSchemas.isSuperset(of: structureNames)
+        }.only) {
+            return result
+        }
+
+        // having a namespace with exact cases
+        if let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace != namespace &&
+                $0.namespace != nil &&
+                $0.mappingSchemas == structureNames
+        }.only) {
+            return result
+        }
+
+        // having a namespace with superset of cases
+        if let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace != namespace &&
+                $0.namespace != nil &&
+                $0.mappingSchemas.isSuperset(of: structureNames)
+        }.only) {
+            return result
+        }
+
+        // not having a namespace with exact cases
+        if let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace == nil &&
+                $0.mappingSchemas == structureNames
+        }.only) {
+            return result
+        }
+
+        // not having a namespace with superset of cases
+        if let result = (matchingDiscriminatorPropertyName.filter {
+            $0.namespace == nil &&
+                $0.mappingSchemas.isSuperset(of: structureNames)
+        }.only) {
+            return result
+        }
+
+        return nil
+    }
+}

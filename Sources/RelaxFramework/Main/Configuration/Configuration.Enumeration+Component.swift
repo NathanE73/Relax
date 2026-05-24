@@ -1,0 +1,59 @@
+//
+// Copyright (c) 2026 Nathan E. Walczak
+//
+// MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+
+import Foundation
+import OpenAPIKit
+
+extension Configuration.Enumeration {
+    func componentEnumeration(
+        document: OpenAPIKit.OpenAPI.Document
+    ) -> Component.Enumeration? {
+        guard let schemaName = schema, let schema = document.components.schemas[.init(stringLiteral: schemaName)] else {
+            return nil
+        }
+
+        guard schema.isString, let allowedValues = schema.allowedValues else {
+            return nil
+        }
+
+        return Component.Enumeration(
+            existing: existing,
+            schemaName: schemaName,
+            namespace: namespace,
+            name: name,
+            codable: codable,
+            mapping: componentMapping(allowedValues: allowedValues)
+        )
+    }
+
+    func componentMapping(allowedValues: [AnyCodable]) -> [Component.Enumeration.Mapping] {
+        allowedValues.map(\.description).filter { $0 != "nil" }.map {
+            let adjustment = mapping.firstWith(value: $0)
+            return Component.Enumeration.Mapping(
+                value: $0,
+                name: adjustment?.name ?? $0
+            )
+        }
+    }
+}
