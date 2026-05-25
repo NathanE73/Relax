@@ -1,0 +1,13 @@
+input:
+- document.yml
+
+output: Generated/Swift
+
+namespaces:
+- namespace: Backend
+  structures:
+  - schema: Order
+  enumerations:
+    - name: OrderStatus
+      schema: Order
+      propertyName: orderStatus

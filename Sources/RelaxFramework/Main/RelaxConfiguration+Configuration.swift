@@ -75,6 +75,7 @@ extension RelaxConfiguration {
                     namespace: namespace.namespace,
                     name: addNamePrefix(enumeration.name ?? enumeration.schema),
                     codable: namespace.codable ?? .codable,
+                    propertyName: enumeration.propertyName,
                     mapping: enumeration.values?.map {
                         Configuration.Enumeration.Mapping(
                             value: $0.value,

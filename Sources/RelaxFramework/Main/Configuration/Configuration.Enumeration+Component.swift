@@ -33,18 +33,33 @@ extension Configuration.Enumeration {
             return nil
         }
 
-        guard schema.isString, let allowedValues = schema.allowedValues else {
-            return nil
+        if schema.isString, let allowedValues = schema.allowedValues {
+            return Component.Enumeration(
+                existing: existing,
+                schemaName: schemaName,
+                namespace: namespace,
+                name: name,
+                codable: codable,
+                mapping: componentMapping(allowedValues: allowedValues)
+            )
         }
 
-        return Component.Enumeration(
-            existing: existing,
-            schemaName: schemaName,
-            namespace: namespace,
-            name: name,
-            codable: codable,
-            mapping: componentMapping(allowedValues: allowedValues)
-        )
+        if schema.isObject, let objectContext = schema.objectContext {
+            if let propertyName, let property = objectContext.properties[propertyName] {
+                if property.isString, let allowedValues = property.allowedValues {
+                    return Component.Enumeration(
+                        existing: existing,
+                        schemaName: schemaName,
+                        namespace: namespace,
+                        name: name,
+                        codable: codable,
+                        mapping: componentMapping(allowedValues: allowedValues)
+                    )
+                }
+            }
+        }
+
+        return nil
     }
 
     func componentMapping(allowedValues: [AnyCodable]) -> [Component.Enumeration.Mapping] {

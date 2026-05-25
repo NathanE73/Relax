@@ -33,6 +33,7 @@ extension Configuration {
         var name: String
         var codable: CodableProtocol?
 
+        var propertyName: String?
         var mapping: [Mapping]
 
         struct Mapping {

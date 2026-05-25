@@ -1,0 +1,13 @@
+input:
+- document.yml
+
+output: Generated/Kotlin
+
+namespaces:
+- namespace: com.example.backend
+  structures:
+  - schema: Order
+  enumerations:
+    - name: OrderStatus
+      schema: Order
+      propertyName: orderStatus

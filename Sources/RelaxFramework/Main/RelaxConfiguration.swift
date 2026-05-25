@@ -77,6 +77,7 @@ struct RelaxConfiguration: Decodable {
 
         var schema: String
         var name: String?
+        var propertyName: String?
         var values: [Value]?
 
         struct Value: Decodable {
