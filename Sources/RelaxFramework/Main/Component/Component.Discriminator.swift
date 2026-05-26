@@ -36,7 +36,7 @@ extension Component {
         var discriminatorProperty: DiscriminatorProperty
         var mapping: [Mapping]
         var enumeration: Component.Enumeration
-        // TODO: sharedProperties
+        var sharedProperties: [SharedProperty]
 
         struct DiscriminatorProperty {
             var name: String

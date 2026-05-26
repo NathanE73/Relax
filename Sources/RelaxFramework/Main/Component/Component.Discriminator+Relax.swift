@@ -43,7 +43,8 @@ extension Component.Discriminator {
             name: name,
             codable: codable ?? .codable,
             discriminatorProperty: relaxDiscriminatorProperty(),
-            mapping: relaxMapping(namespace: discriminatorNamespace),
+            mapping: relaxMapping(),
+            sharedProperties: relaxSharedProperties(),
             discriminators: [],
             enumerations: [relaxEnumeration()],
             structures: relaxStructures(namespace: discriminatorNamespace)
@@ -57,21 +58,39 @@ extension Component.Discriminator {
         )
     }
 
-    func relaxMapping(
-        namespace discriminatorNamespace: String
-    ) -> [Relax.Discriminator.Mapping] {
-        mapping.map {
-            if let structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: $0.schemaName) {
-                Relax.Discriminator.Mapping(
-                    value: $0.value,
-                    type: structure.name,
-                    name: $0.name
+    func relaxMapping() -> [Relax.Discriminator.Mapping] {
+        mapping.map { mapping in
+            Relax.Discriminator.Mapping(
+                value: mapping.value,
+                type: SwiftNaming.name(from: mapping.name),
+                name: mapping.name
+            )
+        }
+    }
+
+    func relaxSharedProperties() -> [Relax.Discriminator.SharedProperty] {
+        if sharedProperties.isEmpty {
+            let structures = mapping.map(\.schemaName).compactMap { schemaName in
+                globalStructures.firstWith(namespace: nil, schemaName: schemaName)
+            }
+            let sharedProperties = structures.sharedProperties
+            return sharedProperties.map { property in
+                Relax.Discriminator.SharedProperty(
+                    name: property.name,
+                    type: property.type.propertyType,
+                    typeNamespace: property.typeNamespace,
+                    collectionType: property.collectionType,
+                    isOptional: property.isOptional
                 )
-            } else {
-                Relax.Discriminator.Mapping(
-                    value: $0.value,
-                    type: $0.value,
-                    name: $0.name
+            }
+        } else {
+            return sharedProperties.map { property in
+                Relax.Discriminator.SharedProperty(
+                    name: property.name,
+                    type: property.type.propertyType,
+                    typeNamespace: property.typeNamespace,
+                    collectionType: property.collectionType,
+                    isOptional: property.isOptional
                 )
             }
         }
@@ -89,7 +108,7 @@ extension Component.Discriminator {
         mapping.compactMap { mapping in
             if var structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: mapping.schemaName), structure.namespace == nil {
                 structure.codable = codable
-                structure.name = structure.name
+                structure.name = SwiftNaming.name(from: mapping.name)
                 return structure.relaxStructure(
                     namespace: fullyQualifiedName,
                     discriminatorProperty: Component.Structure.DiscriminatorProperty(

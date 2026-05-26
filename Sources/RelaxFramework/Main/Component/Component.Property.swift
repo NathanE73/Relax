@@ -36,6 +36,12 @@ extension Component {
 }
 
 extension [Component.Property] {
+    func firstWith(name: String) -> Element? {
+        filter {
+            $0.name == name
+        }.only
+    }
+
     var uniqueSchemaNames: [String] {
         compactMap(\.type.schemaName)
             .reduce(into: []) { result, schemaName in

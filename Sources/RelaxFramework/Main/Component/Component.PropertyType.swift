@@ -43,6 +43,12 @@ extension Component {
     }
 }
 
+extension Component.PropertyType: Equatable {
+    static func == (lhs: Component.PropertyType, rhs: Component.PropertyType) -> Bool {
+        lhs.propertyType == rhs.propertyType
+    }
+}
+
 extension Component.PropertyType {
     var schemaName: String? {
         switch self {

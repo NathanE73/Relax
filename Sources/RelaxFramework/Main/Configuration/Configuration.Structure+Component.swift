@@ -152,7 +152,8 @@ extension Configuration.Structure {
                             name: key.description
                         )
                     } ?? []
-                )
+                ),
+                sharedProperties: [] // TODO: ...
             )
             propertyType = .discriminator(something)
         }

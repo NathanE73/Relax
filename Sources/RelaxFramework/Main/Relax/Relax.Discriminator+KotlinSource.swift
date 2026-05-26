@@ -49,35 +49,31 @@ extension KotlinSource {
             append("val \(discriminator.discriminatorProperty.name): \(discriminator.discriminatorProperty.type)")
         }
         append(")") {
-            let sharedPropertyNames = discriminator.structures.sharedPropertyNames
+            let sharedProperties = discriminator.sharedProperties
 
-            appendSharedDiscriminatorProperties(discriminator, framework, sharedPropertyNames)
+            appendSharedDiscriminatorProperties(discriminator, framework, sharedProperties)
 
             appendEnumerations(discriminator.enumerations, framework)
-            appendStructures(discriminator.structures, framework, discriminator: discriminator, sharedPropertyNames: sharedPropertyNames)
+            appendStructures(discriminator.structures, framework, discriminator: discriminator, sharedProperties: sharedProperties)
         }
     }
 
     func appendSharedDiscriminatorProperties(
         _ discriminator: Relax.Discriminator,
         _ framework: Platform.KotlinFramework,
-        _ sharedPropertyNames: [String]
+        _: [Relax.Discriminator.SharedProperty]
     ) {
-        if let sharedProperties = discriminator.structures.first?.properties {
-            let abstractProperties = sharedProperties
-                .filter {
-                    sharedPropertyNames.contains($0.name) &&
-                        $0.name != discriminator.discriminatorProperty.name
-                }
-            for property in abstractProperties {
-                let name = property.name
-                let type = property.type.kotlinName(for: framework)
-                let isOptional = property.isOptional ? "?" : ""
-                append("abstract val \(name): \(type)\(isOptional)")
-            }
-            if !abstractProperties.isEmpty {
-                append()
-            }
+        let abstractProperties = discriminator.sharedProperties
+            .filter { $0.name != discriminator.discriminatorProperty.name }
+
+        for property in abstractProperties {
+            let name = property.name
+            let type = property.type.kotlinName(for: framework)
+            let isOptional = property.isOptional ? "?" : ""
+            append("abstract val \(name): \(type)\(isOptional)")
+        }
+        if !abstractProperties.isEmpty {
+            append()
         }
     }
 }

@@ -22,7 +22,7 @@ sealed class Pet(
 
     @Serializable
     @SerialName("cat")
-    data class PetCat(
+    data class Cat(
         override val name: String,
         val meow: Boolean,
         val lives: Int
@@ -30,7 +30,7 @@ sealed class Pet(
 
     @Serializable
     @SerialName("dog")
-    data class PetDog(
+    data class Dog(
         override val name: String,
         val bark: Boolean,
         val breed: String

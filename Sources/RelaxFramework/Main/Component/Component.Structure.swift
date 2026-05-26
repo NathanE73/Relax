@@ -73,3 +73,25 @@ extension [Component.Structure] {
         return nil
     }
 }
+
+extension [Component.Structure] {
+    var sharedProperties: [Component.SharedProperty] {
+        guard let firstStructure = first else { return [] }
+
+        let otherStructures = dropFirst()
+
+        return firstStructure.properties.reduce(into: []) { result, property in
+            let sharedProperty = Component.SharedProperty(property)
+
+            for otherStructure in otherStructures {
+                guard let otherProperty = otherStructure.properties.firstWith(name: property.name)
+                else { return }
+                let otherSharedProperty = Component.SharedProperty(otherProperty)
+                guard sharedProperty == otherSharedProperty
+                else { return }
+            }
+
+            result.append(sharedProperty)
+        }
+    }
+}

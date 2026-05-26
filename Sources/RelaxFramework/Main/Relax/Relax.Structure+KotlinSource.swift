@@ -29,10 +29,10 @@ extension KotlinSource {
         _ structures: [Relax.Structure],
         _ framework: Platform.KotlinFramework,
         discriminator: Relax.Discriminator?,
-        sharedPropertyNames: [String]
+        sharedProperties: [Relax.Discriminator.SharedProperty]
     ) {
         for structure in structures {
-            appendStructure(structure, framework, discriminator: discriminator, sharedPropertyNames: sharedPropertyNames)
+            appendStructure(structure, framework, discriminator: discriminator, sharedProperties: sharedProperties)
             append()
         }
     }
@@ -41,14 +41,14 @@ extension KotlinSource {
         _ structure: Relax.Structure,
         _ framework: Platform.KotlinFramework,
         discriminator: Relax.Discriminator?,
-        sharedPropertyNames: [String]
+        sharedProperties: [Relax.Discriminator.SharedProperty]
     ) {
         switch framework {
         case .kotlinx:
             append("@Serializable")
             if let discriminator {
                 let property = structure.properties.firstWith(name: discriminator.discriminatorProperty.name)
-                let propertyValue = discriminator.enumerations.first?.mapping.firstWith(name: property?.value ?? "UNKNOWN")?.value ?? "UNKNOWN"
+                let propertyValue = property?.value ?? "UNKNOWN"
                 append("@SerialName(\"\(propertyValue)\")")
             }
         case .moshi:
@@ -57,6 +57,8 @@ extension KotlinSource {
 
         append("data class \(structure.name)(")
         indent {
+            let sharedPropertyNames = sharedProperties.map(\.name)
+
             for property in structure.properties {
                 if let discriminator, discriminator.discriminatorProperty.name == property.name {
                     continue
@@ -71,7 +73,7 @@ extension KotlinSource {
 
             append()
             if discriminator != nil {
-                appendStructures(structure.structures, framework, discriminator: nil, sharedPropertyNames: [])
+                appendStructures(structure.structures, framework, discriminator: nil, sharedProperties: [])
             }
         }
 
@@ -97,7 +99,7 @@ extension KotlinSource {
 
         append()
         if discriminator == nil {
-            appendStructures(structure.structures, framework, discriminator: nil, sharedPropertyNames: [])
+            appendStructures(structure.structures, framework, discriminator: nil, sharedProperties: [])
         }
     }
 }

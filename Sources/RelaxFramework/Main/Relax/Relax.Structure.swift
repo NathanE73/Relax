@@ -38,20 +38,3 @@ extension Relax {
         var structures: [Structure]
     }
 }
-
-extension [Relax.Structure] {
-    var sharedPropertyNames: [String] {
-        guard let firstStructure = first else { return [] }
-
-        let otherStructures = dropFirst()
-
-        return firstStructure.properties.reduce(into: []) { result, property in
-            for otherStructure in otherStructures {
-                guard otherStructure.properties.firstWith(name: property.name)?.type == property.type
-                else { return }
-            }
-
-            result.append(property.name)
-        }
-    }
-}

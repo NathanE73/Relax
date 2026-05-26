@@ -59,17 +59,13 @@ extension SwiftSource {
     }
 
     func appendSharedDiscriminatorProperties(_ discriminator: Relax.Discriminator) {
-        guard let firstStructure = discriminator.structures.first else { return }
-
-        let sharedPropertyNames = discriminator.structures.sharedPropertyNames
-
-        let properties = firstStructure.properties
-            .filter { sharedPropertyNames.contains($0.name) }
+        let properties = discriminator.sharedProperties
             .filter { $0.name != discriminator.discriminatorProperty.name }
 
         for property in properties {
             let propertyType = property.type
-            append("var \(property.name): \(propertyType.swiftName)") {
+            let isOptional = property.isOptional ? "?" : ""
+            append("var \(property.name): \(propertyType.swiftName)\(isOptional)") {
                 append("switch self {")
                 for mapping in discriminator.mapping {
                     let mappingName = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: mapping.name))

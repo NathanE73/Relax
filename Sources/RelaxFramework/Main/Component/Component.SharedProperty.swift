@@ -24,31 +24,24 @@
 
 import Foundation
 
-extension KotlinSource {
-    func appendComponent(
-        _ component: Relax.Component,
-        _ framework: Platform.KotlinFramework,
-        filename: String,
-        includeGeneratedComment: Bool
-    ) {
-        let imports = component.konlinImports(framework, namespace: component.namespace)
+extension Component {
+    struct SharedProperty: Equatable {
+        var name: String
+        var type: PropertyType
+        var typeNamespace: String?
+        var collectionType: CollectionType?
+        var isOptional: Bool
+    }
+}
 
-        appendHeading(
-            filename: filename,
-            package: component.namespace,
-            imports: imports,
-            includeGeneratedComment: includeGeneratedComment
+extension Component.SharedProperty {
+    init(_ property: Component.Property) {
+        self.init(
+            name: property.name,
+            type: property.type,
+            typeNamespace: property.typeNamespace,
+            collectionType: property.collectionType,
+            isOptional: property.isOptional
         )
-
-        switch component {
-        case let .discriminator(discriminator):
-            appendDiscriminator(discriminator, framework)
-        case let .enumeration(enumeration):
-            appendEnumeration(enumeration, framework)
-        case let .structure(structure):
-            appendStructure(structure, framework, discriminator: nil, sharedProperties: [])
-        }
-
-        append()
     }
 }

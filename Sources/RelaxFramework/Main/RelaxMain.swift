@@ -215,9 +215,9 @@ public struct RelaxMain {
 
 // TODO: refactor
 
+// TODO: rename to abcComponents?
 var globalDiscriminators: [Component.Discriminator] = []
 var globalEnumerations: [Component.Enumeration] = []
-/// used twice in ComponentDiscriminator+Relax
 var globalStructures: [Component.Structure] = []
 
 extension RelaxMain {

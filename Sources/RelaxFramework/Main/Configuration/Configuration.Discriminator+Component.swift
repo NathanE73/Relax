@@ -42,7 +42,8 @@ extension Configuration.Discriminator {
                 codable: codable,
                 discriminatorProperty: componentDiscriminatorProperty(discriminator),
                 mapping: componentMapping(discriminator),
-                enumeration: componentEnumeration(discriminator)
+                enumeration: componentEnumeration(discriminator),
+                sharedProperties: componentSharedProperties(discriminator)
             )
         }
 
@@ -57,7 +58,8 @@ extension Configuration.Discriminator {
                         codable: codable,
                         discriminatorProperty: componentDiscriminatorProperty(discriminator),
                         mapping: componentMapping(discriminator),
-                        enumeration: componentEnumeration(discriminator)
+                        enumeration: componentEnumeration(discriminator),
+                        sharedProperties: componentSharedProperties(discriminator)
                     )
                 }
             }
@@ -102,5 +104,19 @@ extension Configuration.Discriminator {
                 )
             } ?? []
         )
+    }
+
+    func componentSharedProperties(
+        _ discriminator: OpenAPI.Discriminator
+    ) -> [Component.SharedProperty] {
+        let schemaNames = discriminator.mapping?.map { _, value in
+            String(value.split(separator: "/").last ?? "UNKNOWN")
+        } ?? []
+
+        let structures = schemaNames.compactMap {
+            globalStructures.firstWith(namespace: nil, schemaName: $0)
+        }
+
+        return structures.sharedProperties
     }
 }

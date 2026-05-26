@@ -5,22 +5,22 @@ extension Backend {
     @CasePathable
     @dynamicMemberLookup
     enum Pet: Codable, Equatable {
-        case cat(PetCat)
-        case dog(PetDog)
+        case cat(Cat)
+        case dog(Dog)
 
         enum PetType: String, Codable {
             case cat
             case dog
         }
 
-        struct PetCat: Codable, Equatable {
+        struct Cat: Codable, Equatable {
             let petType = PetType.cat
             var name: String
             var meow: Bool
             var lives: Int
         }
 
-        struct PetDog: Codable, Equatable {
+        struct Dog: Codable, Equatable {
             let petType = PetType.dog
             var name: String
             var bark: Bool
@@ -44,9 +44,9 @@ extension KeyedDecodingContainer {
     func decode(_: Backend.Pet.Type, forKey key: Key) throws -> Backend.Pet {
         switch try decode(HavingPetType.self, forKey: key).petType {
         case .cat:
-            try .cat(decode(Backend.Pet.PetCat.self, forKey: key))
+            try .cat(decode(Backend.Pet.Cat.self, forKey: key))
         case .dog:
-            try .dog(decode(Backend.Pet.PetDog.self, forKey: key))
+            try .dog(decode(Backend.Pet.Dog.self, forKey: key))
         }
     }
 
@@ -59,9 +59,9 @@ extension KeyedDecodingContainer {
         while !resultContainer.isAtEnd {
             switch try resultContainer.decode(HavingPetType.self).petType {
             case .cat:
-                try elements.append(.cat(elementContainer.decode(Backend.Pet.PetCat.self)))
+                try elements.append(.cat(elementContainer.decode(Backend.Pet.Cat.self)))
             case .dog:
-                try elements.append(.dog(elementContainer.decode(Backend.Pet.PetDog.self)))
+                try elements.append(.dog(elementContainer.decode(Backend.Pet.Dog.self)))
             }
         }
 

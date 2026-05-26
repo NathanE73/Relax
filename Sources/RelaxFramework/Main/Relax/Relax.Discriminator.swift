@@ -32,6 +32,7 @@ extension Relax {
 
         var discriminatorProperty: DiscriminatorProperty
         var mapping: [Mapping]
+        var sharedProperties: [SharedProperty]
 
         var discriminators: [Discriminator]
         var enumerations: [Enumeration]
@@ -46,6 +47,14 @@ extension Relax {
         struct DiscriminatorProperty {
             var name: String
             var type: String
+        }
+
+        struct SharedProperty {
+            var name: String
+            var type: PropertyType
+            var typeNamespace: String?
+            var collectionType: CollectionType?
+            var isOptional: Bool
         }
     }
 }
