@@ -61,7 +61,7 @@ extension Component.Discriminator {
         namespace discriminatorNamespace: String
     ) -> [Relax.Discriminator.Mapping] {
         mapping.map {
-            if let structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: $0.schema), structure.codable != nil {
+            if let structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: $0.schemaName) {
                 Relax.Discriminator.Mapping(
                     value: $0.value,
                     type: structure.name,
@@ -86,16 +86,16 @@ extension Component.Discriminator {
     func relaxStructures(
         namespace discriminatorNamespace: String
     ) -> [Relax.Structure] {
-        mapping.compactMap {
-            if var structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: $0.schema), structure.namespace == nil {
+        mapping.compactMap { mapping in
+            if var structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: mapping.schemaName), structure.namespace == nil {
                 structure.codable = codable
-                structure.name = $0.value
+                structure.name = structure.name
                 return structure.relaxStructure(
                     namespace: fullyQualifiedName,
                     discriminatorProperty: Component.Structure.DiscriminatorProperty(
                         name: discriminatorProperty.name,
                         type: discriminatorProperty.type,
-                        value: $0.name
+                        value: mapping.name
                     )
                 )
             }

@@ -36,6 +36,7 @@ extension Component {
         var discriminatorProperty: DiscriminatorProperty
         var mapping: [Mapping]
         var enumeration: Component.Enumeration
+        // TODO: sharedProperties
 
         struct DiscriminatorProperty {
             var name: String
@@ -44,12 +45,12 @@ extension Component {
 
         struct Mapping {
             var value: String
-            var schema: String
+            var schemaName: String
             var name: String
         }
 
-        var mappingSchemas: Set<String> {
-            Set(mapping.map(\.schema))
+        var mappingSchemaNames: Set<String> {
+            Set(mapping.map(\.schemaName))
         }
     }
 }
@@ -69,7 +70,7 @@ extension [Component.Discriminator] {
         // matching on namespace with exact cases
         if let namespace, let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace == namespace &&
-                $0.mappingSchemas == structureNames
+                $0.mappingSchemaNames == structureNames
         }.only) {
             return result
         }
@@ -77,7 +78,7 @@ extension [Component.Discriminator] {
         // matching on namespace with superset of cases
         if let namespace, let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace == namespace &&
-                $0.mappingSchemas.isSuperset(of: structureNames)
+                $0.mappingSchemaNames.isSuperset(of: structureNames)
         }.only) {
             return result
         }
@@ -85,7 +86,7 @@ extension [Component.Discriminator] {
         // matching on child namespace with superset of cases
         if let namespace, let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace?.starts(with: "\(namespace).") == true &&
-                $0.mappingSchemas.isSuperset(of: structureNames)
+                $0.mappingSchemaNames.isSuperset(of: structureNames)
         }.only) {
             return result
         }
@@ -94,7 +95,7 @@ extension [Component.Discriminator] {
         if let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace != namespace &&
                 $0.namespace != nil &&
-                $0.mappingSchemas == structureNames
+                $0.mappingSchemaNames == structureNames
         }.only) {
             return result
         }
@@ -103,7 +104,7 @@ extension [Component.Discriminator] {
         if let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace != namespace &&
                 $0.namespace != nil &&
-                $0.mappingSchemas.isSuperset(of: structureNames)
+                $0.mappingSchemaNames.isSuperset(of: structureNames)
         }.only) {
             return result
         }
@@ -111,7 +112,7 @@ extension [Component.Discriminator] {
         // not having a namespace with exact cases
         if let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace == nil &&
-                $0.mappingSchemas == structureNames
+                $0.mappingSchemaNames == structureNames
         }.only) {
             return result
         }
@@ -119,7 +120,7 @@ extension [Component.Discriminator] {
         // not having a namespace with superset of cases
         if let result = (matchingDiscriminatorPropertyName.filter {
             $0.namespace == nil &&
-                $0.mappingSchemas.isSuperset(of: structureNames)
+                $0.mappingSchemaNames.isSuperset(of: structureNames)
         }.only) {
             return result
         }

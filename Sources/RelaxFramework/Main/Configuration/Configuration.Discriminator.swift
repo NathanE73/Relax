@@ -28,22 +28,16 @@ extension Configuration {
     struct Discriminator: FullyQualifiedName {
         var existing: Bool
 
-        var schema: String?
+        var schemaName: String
         var namespace: String?
         var name: String
         var codable: CodableProtocol?
 
-        var property: Property
-        var mapping: [Mapping]
-
-        struct Property {
-            var name: String
-            var type: String
-        }
+        var propertyName: String?
+        var mapping: [Mapping]?
 
         struct Mapping {
             var value: String
-            var schema: String
             var name: String
         }
     }

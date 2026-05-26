@@ -1,7 +1,7 @@
 import Foundation
 
 extension Backend {
-    struct Dog: Codable, Equatable {
+    struct PetDog: Codable, Equatable {
         let petType = Pet.PetType.dog
         var name: String
         var bark: Bool

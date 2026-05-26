@@ -13,21 +13,24 @@ sealed class Pet(
 
     @Serializable
     enum class PetType {
+        @SerialName("cat")
         Cat,
+
+        @SerialName("dog")
         Dog
     }
 
     @Serializable
-    @SerialName("Cat")
-    data class Cat(
+    @SerialName("cat")
+    data class PetCat(
         override val name: String,
         val meow: Boolean,
         val lives: Int
     ) : Pet(PetType.Cat)
 
     @Serializable
-    @SerialName("Dog")
-    data class Dog(
+    @SerialName("dog")
+    data class PetDog(
         override val name: String,
         val bark: Boolean,
         val breed: String

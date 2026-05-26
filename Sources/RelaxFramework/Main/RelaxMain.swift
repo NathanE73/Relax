@@ -238,7 +238,7 @@ extension RelaxMain {
                 missingStructureConfigurations.append(
                     Configuration.Structure(
                         existing: false,
-                        schema: schemaName,
+                        schemaName: schemaName,
                         name: schemaName,
                         properties: []
                     )

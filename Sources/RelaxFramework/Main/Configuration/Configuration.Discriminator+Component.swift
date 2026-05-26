@@ -27,47 +27,80 @@ import OpenAPIKit
 
 extension Configuration.Discriminator {
     func componentDiscriminator(
-        document _: OpenAPIKit.OpenAPI.Document
+        document: OpenAPIKit.OpenAPI.Document
     ) -> Component.Discriminator? {
-        Component.Discriminator(
-            existing: existing,
-            namespace: namespace,
-            name: name,
-            codable: codable,
-            discriminatorProperty: componentDiscriminatorProperty(),
-            mapping: componentMapping(),
-            enumeration: componentEnumeration()
-        )
-    }
+        guard let schema = document.components.schemas[.init(stringLiteral: schemaName)] else {
+            return nil
+        }
 
-    func componentDiscriminatorProperty() -> Component.Discriminator.DiscriminatorProperty {
-        Component.Discriminator.DiscriminatorProperty(
-            name: property.name,
-            type: property.type
-        )
-    }
-
-    func componentMapping() -> [Component.Discriminator.Mapping] {
-        mapping.map {
-            Component.Discriminator.Mapping(
-                value: $0.value,
-                schema: $0.schema,
-                name: $0.name
+        if let discriminator = schema.discriminator {
+            return Component.Discriminator(
+                existing: existing,
+                schemaName: schemaName,
+                namespace: namespace,
+                name: name,
+                codable: codable,
+                discriminatorProperty: componentDiscriminatorProperty(discriminator),
+                mapping: componentMapping(discriminator),
+                enumeration: componentEnumeration(discriminator)
             )
         }
+
+        if schema.isObject, let objectContext = schema.objectContext {
+            if let propertyName, let property = objectContext.properties[propertyName] {
+                if let discriminator = property.discriminator {
+                    return Component.Discriminator(
+                        existing: existing,
+                        schemaName: schemaName,
+                        namespace: namespace,
+                        name: name,
+                        codable: codable,
+                        discriminatorProperty: componentDiscriminatorProperty(discriminator),
+                        mapping: componentMapping(discriminator),
+                        enumeration: componentEnumeration(discriminator)
+                    )
+                }
+            }
+        }
+
+        return nil
     }
 
-    func componentEnumeration() -> Component.Enumeration {
+    func componentDiscriminatorProperty(
+        _ discriminator: OpenAPI.Discriminator
+    ) -> Component.Discriminator.DiscriminatorProperty {
+        Component.Discriminator.DiscriminatorProperty(
+            name: discriminator.propertyName,
+            type: SwiftNaming.name(from: discriminator.propertyName)
+        )
+    }
+
+    func componentMapping(
+        _ discriminator: OpenAPI.Discriminator
+    ) -> [Component.Discriminator.Mapping] {
+        discriminator.mapping?.map { key, value in
+            let schemaName = String(value.split(separator: "/").last ?? "UNKNOWN")
+            return Component.Discriminator.Mapping(
+                value: schemaName,
+                schemaName: schemaName,
+                name: key
+            )
+        } ?? []
+    }
+
+    func componentEnumeration(
+        _ discriminator: OpenAPI.Discriminator
+    ) -> Component.Enumeration {
         Component.Enumeration(
             existing: false,
-            name: property.type,
+            name: SwiftNaming.name(from: discriminator.propertyName),
             codable: codable,
-            mapping: mapping.map {
+            mapping: discriminator.mapping?.map { key, _ in
                 Component.Enumeration.Mapping(
-                    value: $0.value,
-                    name: $0.name
+                    value: key,
+                    name: SwiftNaming.name(from: key)
                 )
-            }
+            } ?? []
         )
     }
 }

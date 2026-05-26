@@ -29,7 +29,7 @@ extension Configuration.Structure {
     func componentStructure(
         document: OpenAPIKit.OpenAPI.Document
     ) -> Component.Structure? {
-        guard let schemaName = schema, let schema = document.components.schemas[.init(stringLiteral: schemaName)] else {
+        guard let schema = document.components.schemas[.init(stringLiteral: schemaName)] else {
             return nil
         }
 
@@ -137,7 +137,7 @@ extension Configuration.Structure {
                 mapping: discriminator.mapping?.map { key, value in
                     Component.Discriminator.Mapping(
                         value: key.description,
-                        schema: String(value.split(separator: "/").last ?? "UNKNOWN"),
+                        schemaName: String(value.split(separator: "/").last ?? "UNKNOWN"),
                         name: key.description
                     )
                 } ?? [],

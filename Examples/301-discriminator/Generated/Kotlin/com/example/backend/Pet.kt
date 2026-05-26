@@ -13,7 +13,10 @@ sealed class Pet(
 
     @Serializable
     enum class PetType {
+        @SerialName("cat")
         Cat,
+
+        @SerialName("dog")
         Dog
     }
 }

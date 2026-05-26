@@ -9,8 +9,22 @@ extension Backend {
         case dog(Dog)
 
         enum PetType: String, Codable {
-            case cat = "Cat"
-            case dog = "Dog"
+            case cat
+            case dog
+        }
+
+        struct Cat: Codable, Equatable {
+            let petType = PetType.cat
+            var name: String
+            var meow: Bool
+            var lives: Int
+        }
+
+        struct Dog: Codable, Equatable {
+            let petType = PetType.dog
+            var name: String
+            var bark: Bool
+            var breed: String
         }
 
         var name: String {

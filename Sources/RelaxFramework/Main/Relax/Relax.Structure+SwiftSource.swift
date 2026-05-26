@@ -61,7 +61,7 @@ extension SwiftSource {
             }
 
             for property in structure.properties {
-                if let discriminator, discriminator.codable.isDecodable, discriminator.discriminatorProperty.name == property.name {
+                if let discriminator, discriminator.codable == .decodable, discriminator.discriminatorProperty.name == property.name {
                     continue
                 }
                 appendProperty(property, currentNamespace: currentNamespace)

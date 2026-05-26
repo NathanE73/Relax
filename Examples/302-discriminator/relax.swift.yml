@@ -7,3 +7,8 @@ namespaces:
 - namespace: Backend
   discriminators:
     - schema: Pet
+  structures:
+    - schema: PetCat
+      name: Cat
+    - schema: PetDog
+      name: Dog

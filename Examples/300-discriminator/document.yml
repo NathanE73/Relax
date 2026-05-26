@@ -13,12 +13,12 @@ components:
       discriminator:
         propertyName: petType
         mapping:
-          cat: '#/components/schemas/Cat'
-          dog: '#/components/schemas/Dog'
+          cat: '#/components/schemas/PetCat'
+          dog: '#/components/schemas/PetDog'
       oneOf:
-        - $ref: '#/components/schemas/Cat'
-        - $ref: '#/components/schemas/Dog'
-    Cat:
+        - $ref: '#/components/schemas/PetCat'
+        - $ref: '#/components/schemas/PetDog'
+    PetCat:
       type: object
       properties:
         petType:
@@ -30,7 +30,7 @@ components:
           type: boolean
         lives:
           type: integer
-    Dog:
+    PetDog:
       type: object
       properties:
         petType:

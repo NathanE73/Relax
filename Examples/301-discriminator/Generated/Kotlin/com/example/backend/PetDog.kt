@@ -4,9 +4,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-@SerialName("Cat")
-data class Cat(
+@SerialName("dog")
+data class PetDog(
     override val name: String,
-    val meow: Boolean,
-    val lives: Int
-) : Pet(PetType.Cat)
+    val bark: Boolean,
+    val breed: String
+) : Pet(PetType.Dog)

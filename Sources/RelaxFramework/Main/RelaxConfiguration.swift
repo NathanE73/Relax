@@ -78,9 +78,9 @@ struct RelaxConfiguration: Decodable {
         var schema: String
         var name: String?
         var propertyName: String?
-        var values: [Value]?
+        var mapping: [Mapping]?
 
-        struct Value: Decodable {
+        struct Mapping: Decodable {
             var value: String
             var name: String?
         }
@@ -110,18 +110,13 @@ struct RelaxConfiguration: Decodable {
     struct Discriminator: Decodable {
         var existing: Bool?
 
-        var name: String
-        var property: Property
-        var mapping: [Mapping]
-
-        struct Property: Decodable {
-            var name: String
-            var type: String?
-        }
+        var schema: String
+        var name: String?
+        var propertyName: String?
+        var mapping: [Mapping]?
 
         struct Mapping: Decodable {
             var value: String
-            var schema: String
             var name: String?
         }
     }

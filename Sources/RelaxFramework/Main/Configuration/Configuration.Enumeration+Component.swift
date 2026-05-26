@@ -29,7 +29,7 @@ extension Configuration.Enumeration {
     func componentEnumeration(
         document: OpenAPIKit.OpenAPI.Document
     ) -> Component.Enumeration? {
-        guard let schemaName = schema, let schema = document.components.schemas[.init(stringLiteral: schemaName)] else {
+        guard let schema = document.components.schemas[.init(stringLiteral: schemaName)] else {
             return nil
         }
 

@@ -48,19 +48,21 @@ extension RelaxConfiguration {
             namespace.discriminators?.map { discriminator in
                 Configuration.Discriminator(
                     existing: discriminator.existing ?? false,
+                    schemaName: discriminator.schema,
                     namespace: namespace.namespace,
-                    name: addNamePrefix(discriminator.name),
+                    name: addNamePrefix(discriminator.name ?? discriminator.schema),
                     codable: namespace.codable ?? .codable,
-                    property: Configuration.Discriminator.Property(
-                        name: discriminator.property.name,
-                        type: discriminator.property.type ?? SwiftNaming.name(from: discriminator.property.name)
-                    ), mapping: discriminator.mapping.map { mapping in
-                        Configuration.Discriminator.Mapping(
-                            value: mapping.value,
-                            schema: mapping.schema,
-                            name: mapping.name ?? SwiftNaming.name(from: mapping.value)
-                        )
-                    }
+                    propertyName: discriminator.propertyName,
+                    mapping: discriminator.mapping?.compactMap { mapping in
+                        if let name = mapping.name {
+                            Configuration.Discriminator.Mapping(
+                                value: mapping.value,
+                                name: name
+                            )
+                        } else {
+                            nil
+                        }
+                    } ?? []
                 )
             } ?? []
         }
@@ -71,16 +73,20 @@ extension RelaxConfiguration {
             namespace.enumerations?.map { enumeration in
                 Configuration.Enumeration(
                     existing: enumeration.existing ?? false,
-                    schema: enumeration.schema,
+                    schemaName: enumeration.schema,
                     namespace: namespace.namespace,
                     name: addNamePrefix(enumeration.name ?? enumeration.schema),
                     codable: namespace.codable ?? .codable,
                     propertyName: enumeration.propertyName,
-                    mapping: enumeration.values?.map {
-                        Configuration.Enumeration.Mapping(
-                            value: $0.value,
-                            name: $0.name
-                        )
+                    mapping: enumeration.mapping?.compactMap { mapping in
+                        if let name = mapping.name {
+                            Configuration.Enumeration.Mapping(
+                                value: mapping.value,
+                                name: name
+                            )
+                        } else {
+                            nil
+                        }
                     } ?? []
                 )
             } ?? []
@@ -91,7 +97,7 @@ extension RelaxConfiguration {
         func something(_ structure: Structure, namespace: String?, codable: CodableProtocol?) -> Configuration.Structure {
             Configuration.Structure(
                 existing: structure.existing ?? false,
-                schema: structure.schema,
+                schemaName: structure.schema,
                 namespace: namespace,
                 name: addNamePrefix(structure.name ?? structure.schema),
                 codable: codable,
@@ -101,11 +107,15 @@ extension RelaxConfiguration {
                         name: property.name,
                         type: property.type == nil ? nil : .object(property.type!),
                         discard: property.discard ?? false,
-                        values: property.values?.map {
-                            Configuration.Structure.Property.Value(
-                                value: $0.value,
-                                name: $0.name
-                            )
+                        values: property.values?.compactMap { value in
+                            if let name = value.name {
+                                Configuration.Structure.Property.Value(
+                                    value: value.value,
+                                    name: name
+                                )
+                            } else {
+                                nil
+                            }
                         } ?? []
                     )
                 } ?? []

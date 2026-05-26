@@ -28,7 +28,7 @@ extension Configuration {
     struct Structure: FullyQualifiedName {
         var existing: Bool
 
-        var schema: String?
+        var schemaName: String
         var namespace: String?
         var name: String
         var codable: CodableProtocol?
@@ -44,16 +44,16 @@ extension Configuration {
 
             struct Value {
                 var value: String
-                var name: String?
+                var name: String
             }
         }
     }
 }
 
 extension [Configuration.Structure] {
-    func firstWith(schema: String) -> Element? {
+    func firstWith(schemaName: String) -> Element? {
         filter {
-            $0.schema == schema
+            $0.schemaName == schemaName
         }.only
     }
 }

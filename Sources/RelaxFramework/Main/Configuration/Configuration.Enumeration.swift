@@ -28,7 +28,7 @@ extension Configuration {
     struct Enumeration: FullyQualifiedName {
         var existing: Bool
 
-        var schema: String?
+        var schemaName: String
         var namespace: String?
         var name: String
         var codable: CodableProtocol?
@@ -38,7 +38,7 @@ extension Configuration {
 
         struct Mapping {
             var value: String
-            var name: String?
+            var name: String
         }
     }
 }
