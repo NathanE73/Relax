@@ -34,7 +34,6 @@ extension Relax {
 
         struct Mapping {
             var value: String
-            var type: String?
             var name: String
         }
     }

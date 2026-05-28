@@ -26,6 +26,7 @@ import Foundation
 import OpenAPIKit
 import Yams
 
+// TODO: generate template from openapi document
 // TODO: report on what schemas were not used?
 // TODO: generate root swift namespace
 
@@ -43,22 +44,18 @@ public struct RelaxMain {
 
     var platform: Platform
 
-    var kotlinMoshiConfiguration: Configuration.KotlinMoshi?
+    var configurations: Configuration.Configurations
 
-    var discriminatorConfigurations: [Configuration.Discriminator] = []
-    var enumerationConfigurations: [Configuration.Enumeration] = []
-    var structureConfigurations: [Configuration.Structure] = []
+    init(_ command: RelaxCommand, _ configuration: RelaxConfiguration) throws {
+        configurationFile = configuration.file ?? ""
 
-    init(_ command: RelaxCommand, _ configuration: RelaxConfiguration?) throws {
-        configurationFile = configuration?.file ?? ""
-
-        if let input = configuration?.input, !input.isEmpty {
+        if let input = configuration.input, !input.isEmpty {
             self.input = input
         } else {
             throw RelaxError.missingInput
         }
 
-        if let output = configuration?.output {
+        if let output = configuration.output {
             self.output = output
         } else {
             throw RelaxError.missingOutput
@@ -78,21 +75,16 @@ public struct RelaxMain {
             throw error
         }
 
-        switch command.platform {
-        case .kotlin: platform = .kotlin(.kotlinx)
-        case .kotlinMoshi: platform = .kotlin(.moshi)
-        case .swift: platform = .swift
+        platform = switch command.platform {
+        case .kotlin: .kotlin(.kotlinx)
+        case .kotlinMoshi: .kotlin(.moshi)
+        case .swift: .swift
         }
 
-        if let configuration {
-            if command.platform == .kotlinMoshi {
-                kotlinMoshiConfiguration = configuration.kotlinMoshiConfiguration()
-            }
-
-            discriminatorConfigurations = configuration.discriminatorConfigurations()
-            enumerationConfigurations = configuration.enumerationConfigurations()
-            structureConfigurations = configuration.structureConfigurations()
-        }
+        configurations = Configuration.Configurations(
+            configuration: configuration,
+            platform: command.platform
+        )
     }
 
     public static func main() {
@@ -108,6 +100,14 @@ public struct RelaxMain {
                 )
             }
 
+            guard let configuration else {
+                throw RelaxError.missingConfiguration
+            }
+
+            if let file = configuration.file {
+                print("Processing configuration: \(file)")
+            }
+
             let main = try RelaxMain(command, configuration)
             try main.run()
         } catch {
@@ -117,37 +117,29 @@ public struct RelaxMain {
     }
 
     func run() throws {
-        let document = documents.first!
+        guard let document = documents.first else { return }
 
-        globalEnumerations = enumerationConfigurations.compactMap { configuration in
-            configuration.componentEnumeration(document: document)
-        }
+        let components = Component.Components(
+            configurations: configurations,
+            document: document
+        )
 
-        globalDiscriminators = discriminatorConfigurations.compactMap { configuration in
-            configuration.componentDiscriminator(document: document)
-        }
-
-        globalStructures = structureConfigurations.compactMap { configuration in
-            configuration.componentStructure(document: document)
-        }
-        globalStructures.append(contentsOf: missingGlobalStructures())
-
-        generateSourceCode()
+        generateSourceCode(from: components)
     }
 
-    func generateSourceCode() {
+    func generateSourceCode(from components: Component.Components) {
         let relaxComponents = (
-            globalDiscriminators.filter { !$0.existing }.compactMap { $0.relaxComponent() } +
-                globalEnumerations.filter { !$0.existing }.compactMap { $0.relaxComponent() } +
-                globalStructures.filter { !$0.existing }.compactMap { $0.relaxComponent() }
+            components.discriminators.filter { !$0.existing }.compactMap { $0.relaxComponent() } +
+                components.enumerations.filter { !$0.existing }.compactMap { $0.relaxComponent() } +
+                components.structures.filter { !$0.existing }.compactMap { $0.relaxComponent() }
         ).sorted(by: \.fullyQualifiedName)
 
         for relaxComponent in relaxComponents {
             generateRelaxComponentSourceCode(relaxComponent)
         }
 
-        if let adapters = kotlinMoshiConfiguration?.adapters {
-            generateMoshiAdaptersSourceCode(adapters)
+        if let adapters = configurations.kotlinMoshi?.adapters {
+            generateMoshiAdaptersSourceCode(adapters, components)
         }
     }
 
@@ -169,14 +161,17 @@ public struct RelaxMain {
         }
     }
 
-    func generateMoshiAdaptersSourceCode(_ adapters: Configuration.KotlinMoshi.Adapters) {
+    func generateMoshiAdaptersSourceCode(
+        _ adapters: Configuration.KotlinMoshi.Adapters,
+        _ components: Component.Components
+    ) {
         for mapping in adapters.mapping {
             let path = sourceCodePath(namespace: adapters.namespace)
             let filename = sourceCodeFilename(namespace: adapters.namespace, componentName: mapping.name)
 
             let relaxComponents: [Relax.Component] = (
-                globalDiscriminators.compactMap { $0.relaxComponent() } +
-                    globalStructures.compactMap { $0.relaxComponent() }
+                components.discriminators.compactMap { $0.relaxComponent() } +
+                    components.structures.compactMap { $0.relaxComponent() }
             )
             .filter { $0.namespace == mapping.namespace }
             .filter { $0.discriminator != nil || $0.structure?.discriminators.isEmpty == false }
@@ -209,45 +204,6 @@ public struct RelaxMain {
         case .swift:
             let fileExtension = oneTime ? Filename.swiftExtension : Filename.swiftRelaxExtension
             return "\(namespace).\(componentName)\(fileExtension)"
-        }
-    }
-}
-
-// TODO: refactor
-
-// TODO: rename to abcComponents?
-var globalDiscriminators: [Component.Discriminator] = []
-var globalEnumerations: [Component.Enumeration] = []
-var globalStructures: [Component.Structure] = []
-
-extension RelaxMain {
-    func missingGlobalStructures() -> [Component.Structure] {
-        let document = documents.first!
-
-        // TODO: how can we simplify this and also support enumerations, and discriminators?
-        var missingStructureConfigurations: [Configuration.Structure] = []
-
-        for (schemaName, schema) in document.components.schemas {
-            guard schema.objectContext != nil else {
-                continue
-            }
-
-            let schemaName = schemaName.rawValue
-
-            if globalStructures.firstWith(namespace: nil, schemaName: schemaName) == nil {
-                missingStructureConfigurations.append(
-                    Configuration.Structure(
-                        existing: false,
-                        schemaName: schemaName,
-                        name: schemaName,
-                        properties: []
-                    )
-                )
-            }
-        }
-
-        return missingStructureConfigurations.compactMap { configuration in
-            configuration.componentStructure(document: document)
         }
     }
 }

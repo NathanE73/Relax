@@ -25,6 +25,7 @@
 import Foundation
 
 enum RelaxError: Error, CustomStringConvertible {
+    case missingConfiguration
     case invalidConfiguration(file: String)
     case missingInput
     case missingOutput
@@ -33,6 +34,8 @@ enum RelaxError: Error, CustomStringConvertible {
 
     var description: String {
         switch self {
+        case .missingConfiguration:
+            "Error: Unable to locate configuration file"
         case let .invalidConfiguration(file):
             "Error: Unable to process configuration file: \(file)"
         case .missingInput:

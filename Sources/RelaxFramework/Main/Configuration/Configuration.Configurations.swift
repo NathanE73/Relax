@@ -23,33 +23,29 @@
 //
 
 import Foundation
+import OpenAPIKit
 
-extension SwiftSource {
-    func appendEnumerations(_ enumerations: [Relax.Enumeration]) {
-        for enumeration in enumerations {
-            appendEnumeration(enumeration)
-            append()
-        }
+extension Configuration {
+    struct Configurations {
+        var kotlinMoshi: KotlinMoshi?
+
+        var discriminators: [Discriminator]
+        var enumerations: [Enumeration]
+        var structures: [Structure]
     }
+}
 
-    func appendEnumeration(_ enumeration: Relax.Enumeration) {
-        let protocols = enumeration.codable.swiftName
-        append("enum \(enumeration.name): String, \(protocols) {")
-
-        indent {
-            for mapping in enumeration.mapping {
-                let mappingName = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: mapping.name))
-
-                if mappingName != mapping.value {
-                    append("case \(mappingName) = \"\(mapping.value)\"")
-                } else {
-                    append("case \(mappingName)")
-                }
-            }
-
-            append()
+extension Configuration.Configurations {
+    init(
+        configuration: RelaxConfiguration,
+        platform: RelaxCommand.Platform
+    ) {
+        if platform == .kotlinMoshi {
+            kotlinMoshi = configuration.kotlinMoshiConfiguration()
         }
 
-        append("}")
+        discriminators = configuration.discriminatorConfigurations()
+        enumerations = configuration.enumerationConfigurations()
+        structures = configuration.structureConfigurations()
     }
 }
