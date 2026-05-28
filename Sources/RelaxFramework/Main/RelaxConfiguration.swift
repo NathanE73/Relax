@@ -60,16 +60,31 @@ struct RelaxConfiguration: Decodable {
     struct Namespace: Decodable {
         var namespace: String
         var codable: CodableProtocol?
+        var discriminators: [Discriminator]?
         var enumerations: [Enumeration]?
         var structures: [Structure]?
-        var discriminators: [Discriminator]?
     }
 
     var modifications: Modification?
 
     struct Modification: Decodable {
+        var discriminators: [Discriminator]?
         var enumerations: [Enumeration]?
         var structures: [Structure]?
+    }
+
+    struct Discriminator: Decodable {
+        var existing: Bool?
+
+        var schema: String
+        var name: String?
+        var propertyName: String?
+        var mapping: [Mapping]?
+
+        struct Mapping: Decodable {
+            var value: String
+            var name: String?
+        }
     }
 
     struct Enumeration: Decodable {
@@ -104,20 +119,6 @@ struct RelaxConfiguration: Decodable {
                 var value: String
                 var name: String?
             }
-        }
-    }
-
-    struct Discriminator: Decodable {
-        var existing: Bool?
-
-        var schema: String
-        var name: String?
-        var propertyName: String?
-        var mapping: [Mapping]?
-
-        struct Mapping: Decodable {
-            var value: String
-            var name: String?
         }
     }
 }

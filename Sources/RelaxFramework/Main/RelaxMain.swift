@@ -85,6 +85,13 @@ public struct RelaxMain {
             configuration: configuration,
             platform: command.platform
         )
+
+        _ = Relax.Configuration.Configurations(
+            configuration: configuration,
+            platform: command.platform
+        )
+
+        _ = Relax.Schema.Schemas(document: documents.first!)
     }
 
     public static func main() {
