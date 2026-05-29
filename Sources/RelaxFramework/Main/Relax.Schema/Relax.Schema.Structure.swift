@@ -74,3 +74,19 @@ extension Relax.Schema.Structure {
         )
     }
 }
+
+extension [Relax.Schema.Structure] {
+    func firstWith(schemaName: String) -> Element? {
+        first {
+            $0.schemaName == schemaName
+        }
+    }
+}
+
+extension [Relax.Schema.Structure.Property] {
+    func firstWith(name: String) -> Element? {
+        first {
+            $0.name == name
+        }
+    }
+}

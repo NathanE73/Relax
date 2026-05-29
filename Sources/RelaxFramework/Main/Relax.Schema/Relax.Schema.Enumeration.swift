@@ -49,3 +49,11 @@ extension Relax.Schema.Enumeration {
         )
     }
 }
+
+extension [Relax.Schema.Enumeration] {
+    func firstWith(schemaName: String) -> Element? {
+        first {
+            $0.schemaName == schemaName
+        }
+    }
+}

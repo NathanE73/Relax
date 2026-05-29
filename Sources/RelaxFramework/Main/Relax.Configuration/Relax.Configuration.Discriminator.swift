@@ -70,3 +70,11 @@ extension Relax.Configuration.Discriminator.Mapping {
         )
     }
 }
+
+extension [Relax.Configuration.Discriminator.Mapping] {
+    func firstWith(value: String) -> Element? {
+        first {
+            $0.value == value
+        }
+    }
+}

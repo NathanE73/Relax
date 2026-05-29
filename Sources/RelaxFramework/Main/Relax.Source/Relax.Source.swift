@@ -23,48 +23,7 @@
 //
 
 import Foundation
-import OpenAPIKit
 
-extension Relax.Schema {
-    struct Discriminator {
-        var schemaName: String
-
-        var discriminatorPropertyName: String
-        var mapping: [Mapping]
-
-        struct Mapping {
-            var value: String
-            var schemaName: String
-        }
-    }
-}
-
-extension Relax.Schema.Discriminator {
-    init?(
-        schemaName: String,
-        discriminator: OpenAPI.Discriminator
-    ) {
-        let mapping = discriminator.mapping?.map { key, value in
-            let schemaName = String(value.split(separator: "/").last ?? "UNKNOWN")
-            return Mapping(
-                value: key,
-                schemaName: schemaName
-            )
-        }
-        guard let mapping, !mapping.isEmpty else { return nil }
-
-        self.init(
-            schemaName: schemaName,
-            discriminatorPropertyName: discriminator.propertyName,
-            mapping: mapping
-        )
-    }
-}
-
-extension [Relax.Schema.Discriminator] {
-    func firstWith(schemaName: String) -> Element? {
-        first {
-            $0.schemaName == schemaName
-        }
-    }
+extension Relax {
+    enum Source {}
 }

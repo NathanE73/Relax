@@ -70,3 +70,11 @@ extension Relax.Configuration.Enumeration.Mapping {
         )
     }
 }
+
+extension [Relax.Configuration.Enumeration.Mapping] {
+    func firstWith(value: String) -> Element? {
+        first {
+            $0.value == value
+        }
+    }
+}
