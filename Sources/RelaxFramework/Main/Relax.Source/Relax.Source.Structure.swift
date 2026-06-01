@@ -34,34 +34,43 @@ extension Relax.Source {
         var codable: CodableProtocol
 
         var identifiablePropertyName: String?
-        var properties: [Component.Property] // TODO: `Component` ?
+        var properties: [Property]
     }
 }
 
 extension Relax.Source.Structure {
     init?(
-        configuration: Relax.Configuration.Structure,
-        schema: Relax.Schema.Structure
+        configuration: Relax.Configuration.Structure?,
+        schema: Relax.Schema.Structure,
+        clarifyPropertyType: (_ propertyType: PropertyType) -> PropertyType
     ) {
         self.init(
-            existing: configuration.existing,
+            existing: configuration?.existing ?? false,
             schemaName: schema.schemaName,
-            namespace: configuration.namespace,
-            name: configuration.name,
-            codable: configuration.codable ?? .codable,
-            identifiablePropertyName: configuration.identifiablePropertyName,
+            namespace: configuration?.namespace,
+            name: configuration?.name ?? schema.schemaName,
+            codable: configuration?.codable ?? .codable,
+            identifiablePropertyName: configuration?.identifiablePropertyName,
             properties: schema.properties.compactMap {
-                let property = configuration.properties.firstWith(name: $0.name)
+                let property = configuration?.properties.firstWith(name: $0.name)
                 guard property?.discard != true else { return nil }
-                return Component.Property(
+                let propertyType = clarifyPropertyType(property?.type ?? $0.type)
+                return Relax.Source.Property(
                     name: $0.name,
-                    type: property?.type?.propertyType ?? $0.type.propertyType,
-                    typeNamespace: nil,
+                    type: propertyType,
                     collectionType: $0.collectionType,
                     isOptional: $0.isOptional,
-                    value: nil // TODO: ...
+                    value: $0.value
                 )
             }
         )
+    }
+}
+
+extension [Relax.Source.Structure] {
+    func firstWith(schemaName: String) -> Element? {
+        filter {
+            $0.schemaName == schemaName
+        }.only
     }
 }

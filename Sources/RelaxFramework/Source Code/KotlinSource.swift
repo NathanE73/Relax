@@ -27,21 +27,42 @@ import Foundation
 class KotlinSource: Source {
     func appendHeading(
         filename: String,
-        package: String,
-        imports: [String] = [],
+        package: String?,
         includeGeneratedComment: Bool
     ) {
         if includeGeneratedComment {
             appendHeaderComment(filename: filename)
         }
 
-        append("package \(package)")
-        append()
-
-        for module in Set(imports).sorted() {
-            append("import \(module)")
+        if let package {
+            append("package \(package)")
+            append()
         }
 
-        append()
+        insertImportsPlaceholder()
+    }
+
+    // MARK: - Import Packages
+
+    var packages: Set<String> = []
+
+    func insertImportsPlaceholder() {
+        insertPlaceholder("imports")
+    }
+
+    func importPackage(_ package: String?) {
+        if let package {
+            packages.insert(package)
+        }
+    }
+
+    func resolveImportsPlaceholder() {
+        resolvePlaceholder("imports") {
+            for module in Set(packages).sorted() {
+                append("import \(module)")
+            }
+            append()
+        }
+        packages = []
     }
 }

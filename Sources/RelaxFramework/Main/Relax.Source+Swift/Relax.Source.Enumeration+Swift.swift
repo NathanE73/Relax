@@ -24,34 +24,48 @@
 
 import Foundation
 
-extension Component.Enumeration {
-    func relaxComponent() -> Relax.Component? {
-        guard let namespace else { return nil }
-
-        return .enumeration(
-            relaxEnumeration(
-                namespace: namespace
-            )
+extension SwiftSource {
+    func appendEnumeration(
+        _ enumeration: Relax.Source.Enumeration,
+        filename: String,
+        includeGeneratedComment: Bool
+    ) {
+        appendHeading(
+            filename: filename,
+            imports: ["Foundation"],
+            includeGeneratedComment: includeGeneratedComment
         )
-    }
 
-    func relaxEnumeration(
-        namespace enumerationNamespace: String
-    ) -> Relax.Enumeration {
-        Relax.Enumeration(
-            namespace: enumerationNamespace,
-            name: name,
-            codable: codable ?? .codable,
-            mapping: relaxMapping()
-        )
-    }
-
-    func relaxMapping() -> [Relax.Enumeration.Mapping] {
-        mapping.map {
-            Relax.Enumeration.Mapping(
-                value: $0.value,
-                name: $0.name
-            )
+        if let namespace = enumeration.namespace {
+            append("extension \(namespace)") {
+                appendEnumeration(enumeration)
+            }
+        } else {
+            appendEnumeration(enumeration)
         }
+
+        append()
+    }
+
+    func appendEnumeration(
+        _ enumeration: Relax.Source.Enumeration
+    ) {
+        let protocols = enumeration.codable.swiftName
+        append("enum \(enumeration.name): String, \(protocols) {")
+
+        indent {
+            for mapping in enumeration.mapping {
+                let name = SwiftNaming.escapeKeyword(mapping.name)
+                if mapping.name != mapping.value {
+                    append("case \(name) = \"\(mapping.value)\"")
+                } else {
+                    append("case \(name)")
+                }
+            }
+
+            append()
+        }
+
+        append("}")
     }
 }

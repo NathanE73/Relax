@@ -52,18 +52,18 @@ extension Relax.Source {
 
 extension Relax.Source.Discriminator {
     init?(
-        configuration: Relax.Configuration.Discriminator,
+        configuration: Relax.Configuration.Discriminator?,
         schema: Relax.Schema.Discriminator
     ) {
         self.init(
-            existing: configuration.existing,
+            existing: configuration?.existing ?? false,
             schemaName: schema.schemaName,
-            namespace: configuration.namespace,
-            name: configuration.name,
-            codable: configuration.codable ?? .codable,
+            namespace: configuration?.namespace,
+            name: configuration?.name ?? schema.schemaName,
+            codable: configuration?.codable ?? .codable,
             discriminatorPropertyName: schema.discriminatorPropertyName,
             mapping: schema.mapping.map {
-                let mapping = configuration.mapping?.firstWith(value: $0.value)
+                let mapping = configuration?.mapping?.firstWith(value: $0.value)
                 return Relax.Source.Discriminator.Mapping(
                     value: $0.value,
                     schemaName: $0.schemaName,
@@ -75,9 +75,9 @@ extension Relax.Source.Discriminator {
                 schemaName: nil,
                 namespace: nil,
                 name: schema.discriminatorPropertyName.firstCharacterUppercased, // TODO: ...
-                codable: configuration.codable ?? .codable,
+                codable: configuration?.codable ?? .codable,
                 mapping: schema.mapping.map {
-                    let mapping = configuration.mapping?.firstWith(value: $0.value)
+                    let mapping = configuration?.mapping?.firstWith(value: $0.value)
                     return Relax.Source.Enumeration.Mapping(
                         value: $0.value,
                         name: mapping?.name ?? $0.value.firstCharacterLowercased // TODO: ...
@@ -97,6 +97,8 @@ extension Relax.Source.Discriminator {
 
         guard let property = schema.properties.firstWith(name: propertyName) else { return nil }
 
+        guard case let .discriminator(discriminator) = property.type else { return nil }
+
         self.init(
             existing: configuration.existing,
             schemaName: nil,
@@ -104,7 +106,7 @@ extension Relax.Source.Discriminator {
             name: configuration.name,
             codable: configuration.codable ?? .codable,
             discriminatorPropertyName: property.name,
-            mapping: property.mapping.map {
+            mapping: discriminator.mapping.map {
                 let mapping = configuration.mapping?.firstWith(value: $0.value)
                 return Relax.Source.Discriminator.Mapping(
                     value: $0.value,
@@ -116,9 +118,9 @@ extension Relax.Source.Discriminator {
                 existing: false,
                 schemaName: nil,
                 namespace: nil,
-                name: property.discriminatorPropertyName?.firstCharacterUppercased ?? "UNKNOWN", // TODO: ...
+                name: discriminator.discriminatorPropertyName.firstCharacterUppercased, // TODO: ...
                 codable: configuration.codable ?? .codable,
-                mapping: property.mapping.map {
+                mapping: discriminator.mapping.map {
                     let mapping = configuration.mapping?.firstWith(value: $0.value)
                     return Relax.Source.Enumeration.Mapping(
                         value: $0.value,
@@ -127,5 +129,13 @@ extension Relax.Source.Discriminator {
                 }
             )
         )
+    }
+}
+
+extension [Relax.Source.Discriminator] {
+    func firstWith(schemaName: String) -> Element? {
+        filter {
+            $0.schemaName == schemaName
+        }.only
     }
 }

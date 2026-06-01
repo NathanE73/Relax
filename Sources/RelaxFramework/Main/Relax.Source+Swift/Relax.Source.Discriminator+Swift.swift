@@ -24,34 +24,31 @@
 
 import Foundation
 
-extension PropertyType {
-    func kotlinName(for framework: Platform.KotlinFramework) -> String {
-        switch (self, framework) {
-        case (.bool, _): "Boolean"
-        case (.date, _): "OffsetDateTime"
-        case (.double, .kotlinx): "BigDecimal"
-        case (.double, .moshi): "Double"
-        case (.float, _): "Float"
-        case (.int, _): "Int"
-        case (.int32, _): "Int"
-        case (.int64, _): "Long"
-        case let (.object(object), _): object
-        case (.string, _): "String"
+extension SwiftSource {
+    func appendDiscriminator(
+        _ discriminator: Relax.Source.Discriminator,
+        filename: String,
+        includeGeneratedComment: Bool
+    ) {
+        appendHeading(
+            filename: filename,
+            imports: ["Foundation"],
+            includeGeneratedComment: includeGeneratedComment
+        )
+
+        if let namespace = discriminator.namespace {
+            append("extension \(namespace)") {
+                appendDiscriminator(discriminator)
+            }
+        } else {
+            appendDiscriminator(discriminator)
         }
+
+        append()
     }
 
-    func kotlinImportName(for framework: Platform.KotlinFramework) -> String? {
-        switch (self, framework) {
-        case (.bool, _): nil
-        case (.date, _): "java.time"
-        case (.double, .kotlinx): "java.math"
-        case (.double, .moshi): nil
-        case (.float, _): nil
-        case (.int, _): nil
-        case (.int32, _): nil
-        case (.int64, _): nil
-        case (.object, _): nil
-        case (.string, _): nil
-        }
+    func appendDiscriminator(
+        _ discriminator: Relax.Source.Discriminator
+    ) {
     }
 }

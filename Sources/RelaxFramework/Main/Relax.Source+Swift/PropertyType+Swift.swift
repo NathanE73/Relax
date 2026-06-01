@@ -24,21 +24,24 @@
 
 import Foundation
 
-extension Relax {
-    struct Property {
-        var name: String
-        var type: PropertyType
-        var typeNamespace: String?
-        var collectionType: CollectionType?
-        var isOptional: Bool
-        var value: String?
-    }
-}
-
-extension [Relax.Property] {
-    func firstWith(name: String) -> Element? {
-        filter {
-            $0.name == name
-        }.only
+extension PropertyType {
+    var swiftName: String {
+        switch self {
+        case let .stock(stock):
+            switch stock {
+            case .bool: "Bool"
+            case .date: "Date"
+            case .double: "Double"
+            case .float: "Float"
+            case .int: "Int"
+            case .int32: "Int32"
+            case .int64: "Int64"
+            case .string: "String"
+            }
+        case let .schema(schema): schema.name
+        case let .discriminator(discriminator): discriminator.name
+        case let .enumeration(enumeration): enumeration.name
+        case .unknown: "UNKNOWN"
+        }
     }
 }

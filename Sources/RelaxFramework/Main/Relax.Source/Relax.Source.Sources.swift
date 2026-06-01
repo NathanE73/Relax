@@ -73,11 +73,49 @@ extension Relax.Source.Sources {
             if let schema = schemas.structures.firstWith(schemaName: configuration.schemaName) {
                 Relax.Source.Structure(
                     configuration: configuration,
-                    schema: schema
+                    schema: schema,
+                    clarifyPropertyType: configurations.clarifyPropertyType
                 )
             } else {
                 nil
             }
         }
+
+        let enumerationSchemaNames = enumerations.compactMap(\.schemaName)
+        enumerations.append(contentsOf: schemas.enumerations.compactMap { schema in
+            if !enumerationSchemaNames.contains(schema.schemaName) {
+                Relax.Source.Enumeration(
+                    configuration: nil,
+                    schema: schema
+                )
+            } else {
+                nil
+            }
+        })
+
+        let discriminatorSchemaNames = discriminators.compactMap(\.schemaName)
+        discriminators.append(contentsOf: schemas.discriminators.compactMap { schema in
+            if !discriminatorSchemaNames.contains(schema.schemaName) {
+                Relax.Source.Discriminator(
+                    configuration: nil,
+                    schema: schema
+                )
+            } else {
+                nil
+            }
+        })
+
+        let structureSchemaNames = structures.compactMap(\.schemaName)
+        structures.append(contentsOf: schemas.structures.compactMap { schema in
+            if !structureSchemaNames.contains(schema.schemaName) {
+                Relax.Source.Structure(
+                    configuration: nil,
+                    schema: schema,
+                    clarifyPropertyType: configurations.clarifyPropertyType
+                )
+            } else {
+                nil
+            }
+        })
     }
 }

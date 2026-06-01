@@ -26,41 +26,45 @@ import Foundation
 
 extension SwiftSource {
     func appendProperty(
-        _ property: Relax.Property,
+        _ property: Relax.Source.Property,
         currentNamespace: String?
     ) {
+        // append("/// \(property.type)")
+
         if let value = property.value {
             switch property.type {
-            case let .object(object):
-                let objectValue = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: value))
-                append("let \(property.name) = \(object).\(objectValue)")
-            case .string:
+            case let .schema(schema):
+                let type = schema.name
+                let objectValue = SwiftNaming.escapeKeyword(value)
+                append("let \(property.name) = \(type).\(objectValue)")
+            case .stock(.string):
                 append("let \(property.name) = \"\(value)\"")
             default:
                 append("let \(property.name) = \(value)")
             }
         } else {
-            let type = property.type.swiftName
+            let type = if case let .schema(schema) = property.type {
+                if let namespace = schema.namespace, namespace != currentNamespace {
+                    "\(namespace).\(schema.name)"
+                } else {
+                    schema.name
+                }
+            } else {
+                property.type.swiftName
+            }
+
             let isOptional = property.isOptional ? "?" : ""
 
             switch property.collectionType {
             case .array:
-                if let typeNamespace = property.typeNamespace, typeNamespace != currentNamespace {
-                    append("var \(property.name): [\(typeNamespace).\(type)]\(isOptional)")
-                } else {
-                    append("var \(property.name): [\(type)]\(isOptional)")
-                }
+                append("var \(property.name): [\(type)]\(isOptional)")
             case nil:
-                if let typeNamespace = property.typeNamespace, typeNamespace != currentNamespace {
-                    append("var \(property.name): \(typeNamespace).\(type)\(isOptional)")
-                } else {
-                    append("var \(property.name): \(type)\(isOptional)")
-                }
+                append("var \(property.name): \(type)\(isOptional)")
             }
         }
     }
 
-    func appendIdentifiableProperty(_ property: Relax.Property) {
+    func appendIdentifiableProperty(_ property: Relax.Source.Property) {
         guard property.value == nil else { return }
 
         let type = property.type.swiftName

@@ -44,20 +44,20 @@ extension Relax.Source {
 
 extension Relax.Source.Enumeration {
     init?(
-        configuration: Relax.Configuration.Enumeration,
+        configuration: Relax.Configuration.Enumeration?,
         schema: Relax.Schema.Enumeration
     ) {
         self.init(
-            existing: configuration.existing,
+            existing: configuration?.existing ?? false,
             schemaName: schema.schemaName,
-            namespace: configuration.namespace,
-            name: configuration.name,
-            codable: configuration.codable ?? .codable,
+            namespace: configuration?.namespace,
+            name: configuration?.name ?? schema.schemaName,
+            codable: configuration?.codable ?? .codable,
             mapping: schema.values.map { value in
-                let mapping = configuration.mapping.firstWith(value: value)
+                let mapping = configuration?.mapping.firstWith(value: value)
                 return Mapping(
                     value: value,
-                    name: mapping?.name ?? value
+                    name: mapping?.name ?? SwiftNaming.methodName(from: value)
                 )
             }
         )
@@ -71,7 +71,7 @@ extension Relax.Source.Enumeration {
 
         guard let property = schema.properties.firstWith(name: propertyName) else { return nil }
 
-        guard !property.values.isEmpty else { return nil }
+        guard case let .enumeration(enumeration) = property.type else { return nil }
 
         self.init(
             existing: configuration.existing,
@@ -79,13 +79,21 @@ extension Relax.Source.Enumeration {
             namespace: configuration.namespace,
             name: configuration.name,
             codable: configuration.codable ?? .codable,
-            mapping: property.values.map { value in
-                let mapping = configuration.mapping.firstWith(value: value)
+            mapping: enumeration.mapping.map {
+                let mapping = configuration.mapping.firstWith(value: $0.value)
                 return Mapping(
-                    value: value,
-                    name: mapping?.name ?? value
+                    value: $0.value,
+                    name: mapping?.name ?? SwiftNaming.methodName(from: $0.value)
                 )
             }
         )
+    }
+}
+
+extension [Relax.Source.Enumeration] {
+    func firstWith(schemaName: String) -> Element? {
+        filter {
+            $0.schemaName == schemaName
+        }.only
     }
 }

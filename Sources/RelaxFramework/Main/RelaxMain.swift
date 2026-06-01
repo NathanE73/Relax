@@ -26,11 +26,6 @@ import Foundation
 import OpenAPIKit
 import Yams
 
-// TODO: generate template from openapi document
-// TODO: report on what schemas were not used?
-// TODO: generate root swift namespace
-
-// TODO: review
 public struct RelaxMain {
     var configurationFile: String
 
@@ -44,7 +39,7 @@ public struct RelaxMain {
 
     var platform: Platform
 
-    var configurations: Configuration.Configurations
+    var sources: Relax.Source.Sources
 
     init(_ command: RelaxCommand, _ configuration: RelaxConfiguration) throws {
         configurationFile = configuration.file ?? ""
@@ -81,21 +76,18 @@ public struct RelaxMain {
         case .swift: .swift
         }
 
-        configurations = Configuration.Configurations(
+        let configurations = Relax.Configuration.Configurations(
             configuration: configuration,
             platform: command.platform
         )
 
-        relaxConfigurations = Relax.Configuration.Configurations(
-            configuration: configuration,
-            platform: command.platform
-        )
+        let schemas = Relax.Schema.Schemas(document: documents.first!)
 
-        relaxSchemas = Relax.Schema.Schemas(document: documents.first!)
+        sources = Relax.Source.Sources(
+            configurations: configurations,
+            schemas: schemas
+        )
     }
-
-    var relaxConfigurations: Relax.Configuration.Configurations
-    var relaxSchemas: Relax.Schema.Schemas
 
     public static func main() {
         do {
@@ -127,83 +119,65 @@ public struct RelaxMain {
     }
 
     func run() throws {
-        guard let document = documents.first else { return }
-
-        let sources = Relax.Source.Sources(
-            configurations: relaxConfigurations,
-            schemas: relaxSchemas
-        )
-
-        let components = Component.Components(
-            sources: sources,
-            configurations: configurations,
-            document: document
-        )
-
-        generateSourceCode(from: components)
+        generateSourceCode(from: sources)
     }
 
-    func generateSourceCode(from components: Component.Components) {
-        let relaxComponents = (
-            components.discriminators.filter { !$0.existing }.compactMap { $0.relaxComponent() } +
-                components.enumerations.filter { !$0.existing }.compactMap { $0.relaxComponent() } +
-                components.structures.filter { !$0.existing }.compactMap { $0.relaxComponent() }
-        ).sorted(by: \.fullyQualifiedName)
+    func generateSourceCode(from sources: Relax.Source.Sources) {
+        for discriminator in sources.discriminators {
+            guard let namespace = discriminator.namespace else { continue }
+            let path = sourceCodePath(namespace: namespace)
+            let filename = sourceCodeFilename(namespace: namespace, componentName: discriminator.name)
 
-        for relaxComponent in relaxComponents {
-            generateRelaxComponentSourceCode(relaxComponent)
+            switch platform {
+            case let .kotlin(framework):
+                let source = KotlinSource()
+                source.appendDiscriminator(discriminator, framework, filename: filename, includeGeneratedComment: !oneTime)
+                let sourceFile = SourceFile(filename, at: path)
+                sourceFile.write(source.source)
+            case .swift:
+                let source = SwiftSource()
+                source.appendDiscriminator(discriminator, filename: filename, includeGeneratedComment: !oneTime)
+                let sourceFile = SourceFile(filename, at: path)
+                sourceFile.write(source.source)
+            }
         }
 
-        if let adapters = configurations.kotlinMoshi?.adapters {
-            generateMoshiAdaptersSourceCode(adapters, components)
+        for enumeration in sources.enumerations {
+            guard let namespace = enumeration.namespace else { continue }
+            let path = sourceCodePath(namespace: namespace)
+            let filename = sourceCodeFilename(namespace: namespace, componentName: enumeration.name)
+
+            switch platform {
+            case let .kotlin(framework):
+                let source = KotlinSource()
+                source.appendEnumeration(enumeration, framework, filename: filename, includeGeneratedComment: !oneTime)
+                let sourceFile = SourceFile(filename, at: path)
+                sourceFile.write(source.source)
+            case .swift:
+                let source = SwiftSource()
+                source.appendEnumeration(enumeration, filename: filename, includeGeneratedComment: !oneTime)
+                let sourceFile = SourceFile(filename, at: path)
+                sourceFile.write(source.source)
+            }
         }
-    }
 
-    func generateRelaxComponentSourceCode(_ relaxComponent: Relax.Component) {
-        let path = sourceCodePath(namespace: relaxComponent.namespace)
-        let filename = sourceCodeFilename(namespace: relaxComponent.namespace, componentName: relaxComponent.name)
+        for structure in sources.structures {
+            guard let namespace = structure.namespace else { continue }
+            let path = sourceCodePath(namespace: namespace)
+            let filename = sourceCodeFilename(namespace: namespace, componentName: structure.name)
 
-        switch platform {
-        case let .kotlin(framework):
-            let source = KotlinSource()
-            source.appendComponent(relaxComponent, framework, filename: filename, includeGeneratedComment: !oneTime)
-            let sourceFile = SourceFile(filename, at: path)
-            sourceFile.write(source.source)
-        case .swift:
-            let source = SwiftSource()
-            source.appendComponent(relaxComponent, filename: filename, includeGeneratedComment: !oneTime)
-            let sourceFile = SourceFile(filename, at: path)
-            sourceFile.write(source.source)
-        }
-    }
-
-    func generateMoshiAdaptersSourceCode(
-        _ adapters: Configuration.KotlinMoshi.Adapters,
-        _ components: Component.Components
-    ) {
-        for mapping in adapters.mapping {
-            let path = sourceCodePath(namespace: adapters.namespace)
-            let filename = sourceCodeFilename(namespace: adapters.namespace, componentName: mapping.name)
-
-            let relaxComponents: [Relax.Component] = (
-                components.discriminators.compactMap { $0.relaxComponent() } +
-                    components.structures.compactMap { $0.relaxComponent() }
-            )
-            .filter { $0.namespace == mapping.namespace }
-            .filter { $0.discriminator != nil || $0.structure?.discriminators.isEmpty == false }
-            .sorted(by: \.fullyQualifiedName)
-
-            let source = KotlinSource()
-            source.appendMoshiDiscriminatorAdapter(
-                relaxComponents: relaxComponents,
-                mappingName: mapping.name,
-                namespace: adapters.namespace,
-                filename: filename,
-                includeGeneratedComment: !oneTime
-            )
-
-            let sourceFile = SourceFile(filename, at: path)
-            sourceFile.write(source.source)
+            switch platform {
+            case let .kotlin(framework):
+                let source = KotlinSource()
+                source.appendStructure(structure, sources, framework, filename: filename, includeGeneratedComment: !oneTime)
+                let sourceFile = SourceFile(filename, at: path)
+                sourceFile.write(source.source)
+            case .swift:
+                let source = SwiftSource()
+                source.appendStructure(structure, sources, filename: filename, includeGeneratedComment: !oneTime)
+                let sourceFile = SourceFile(filename, at: path)
+                sourceFile.write(source.source)
+            }
         }
     }
 

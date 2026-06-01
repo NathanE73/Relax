@@ -61,6 +61,14 @@ extension Relax.Configuration.Discriminator {
     }
 }
 
+extension [Relax.Configuration.Discriminator] {
+    func firstWith(schemaName: String) -> Element? {
+        first {
+            $0.schemaName == schemaName
+        }
+    }
+}
+
 extension Relax.Configuration.Discriminator.Mapping {
     init?(mapping: RelaxConfiguration.Discriminator.Mapping) {
         guard let name = mapping.name else { return nil }

@@ -25,27 +25,39 @@
 import Foundation
 import OpenAPIKit
 
-extension Configuration {
-    struct Configurations {
-        var kotlinMoshi: KotlinMoshi?
-
-        var discriminators: [Discriminator]
-        var enumerations: [Enumeration]
-        var structures: [Structure]
-    }
-}
-
-extension Configuration.Configurations {
-    init(
-        configuration: RelaxConfiguration,
-        platform: RelaxCommand.Platform
-    ) {
-        if platform == .kotlinMoshi {
-            kotlinMoshi = configuration.kotlinMoshiConfiguration()
+extension JSONSchema {
+    var propertyType: PropertyType? {
+        if isBoolean {
+            return .stock(.bool)
+        } else if isInteger {
+            switch formatString {
+            case "int32": return .stock(.int32)
+            case "int64": return .stock(.int64)
+            default: return .stock(.int)
+            }
+        } else if isNumber {
+            switch formatString {
+            case "double": return .stock(.double)
+            case "float": return .stock(.float)
+            default: return .stock(.double)
+            }
+        } else if isString {
+            switch formatString {
+            case "date": return .stock(.date)
+            case "date-time": return .stock(.date)
+            default: return .stock(.string)
+            }
+        } else if let schemaName = reference?.name {
+            return .schema(PropertyType.Schema(
+                name: schemaName,
+                schemaName: schemaName
+            ))
+        } else if subschemas.count == 1 {
+            return subschemas.first!.propertyType
+        } else if subschemas.count == 2, subschemas.second!.isNull {
+            return subschemas.first!.propertyType
         }
 
-        discriminators = configuration.discriminatorConfigurations()
-        enumerations = configuration.enumerationConfigurations()
-        structures = configuration.structureConfigurations()
+        return .unknown
     }
 }

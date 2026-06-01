@@ -145,6 +145,37 @@ class Source {
 
         insideCommentBlock = false
     }
+
+    // MARK: Placeholder
+
+    private func placeholder(name: String) -> String {
+        "[> \(name.uppercased()) <]"
+    }
+
+    func insertPlaceholder(_ name: String) {
+        append(placeholder(name: name))
+    }
+
+    func resolvePlaceholder(_ name: String, block: () -> Void) {
+        let placeholder = placeholder(name: name)
+
+        let previousIndentLevel = indentLevel
+        let previousLines = lines
+
+        lines = []
+        block()
+        let newLines = lines
+
+        lines = previousLines
+        indentLevel = previousIndentLevel
+
+        if let index = lines.firstIndex(where: { _, line in
+            line == placeholder
+        }) {
+            lines.remove(at: index)
+            lines.insert(contentsOf: newLines, at: index)
+        }
+    }
 }
 
 extension Source {

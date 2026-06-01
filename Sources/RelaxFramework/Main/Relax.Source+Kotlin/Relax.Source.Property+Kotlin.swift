@@ -25,30 +25,36 @@
 import Foundation
 
 extension KotlinSource {
-    func appendComponent(
-        _ component: Relax.Component,
+    func appendProperty(
+        _ property: Relax.Source.Property,
         _ framework: Platform.KotlinFramework,
-        filename: String,
-        includeGeneratedComment: Bool
+        override: Bool
     ) {
-        let imports = component.konlinImports(framework, namespace: component.namespace)
+        let override = override ? "override " : ""
 
-        appendHeading(
-            filename: filename,
-            package: component.namespace,
-            imports: imports,
-            includeGeneratedComment: includeGeneratedComment
-        )
+        let type = property.type.kotlinName(for: framework)
 
-        switch component {
-        case let .discriminator(discriminator):
-            appendDiscriminator(discriminator, framework)
-        case let .enumeration(enumeration):
-            appendEnumeration(enumeration, framework)
-        case let .structure(structure):
-            appendStructure(structure, framework, discriminator: nil, sharedProperties: [])
+        if case let .schema(schema) = property.type {
+            if let namespace = schema.namespace {
+                importPackage("\(namespace).\(schema.name)")
+            }
+        } else {
+            importPackage(property.type.kotlinPackageName(for: framework))
         }
 
-        append()
+        if framework == .kotlinx {
+            if property.type.kotlinPackageName(for: framework) != nil {
+                importPackage("kotlinx.serialization.Contextual")
+                append("@Contextual")
+            }
+        }
+
+        switch property.collectionType {
+        case .array:
+            append("\(override)val \(property.name): List<\(type)>,")
+        case nil:
+            let isOptional = property.isOptional ? "? = null" : ""
+            append("\(override)val \(property.name): \(type)\(isOptional),")
+        }
     }
 }

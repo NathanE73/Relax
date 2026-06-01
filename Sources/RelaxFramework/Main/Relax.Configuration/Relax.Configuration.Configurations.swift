@@ -30,11 +30,34 @@ extension Relax.Configuration {
         var enumerations: [Enumeration]
         var structures: [Structure]
 
-        var discriminatorModifications: [Discriminator]
-        var enumerationModifications: [Enumeration]
-        var structureModifications: [Structure]
-
         var kotlinMoshi: KotlinMoshi?
+    }
+}
+
+extension Relax.Configuration.Configurations {
+    func clarifyPropertyType(_ propertyType: PropertyType) -> PropertyType {
+        if case var .schema(schema) = propertyType {
+            guard let schemaName = schema.schemaName else { return propertyType }
+
+            if let discriminator = discriminators.firstWith(schemaName: schemaName) {
+                schema.name = discriminator.name
+                schema.namespace = discriminator.namespace
+            }
+
+            if let enumeration = enumerations.firstWith(schemaName: schemaName) {
+                schema.name = enumeration.name
+                schema.namespace = enumeration.namespace
+            }
+
+            if let structure = structures.firstWith(schemaName: schemaName) {
+                schema.name = structure.name
+                schema.namespace = structure.namespace
+            }
+
+            return .schema(schema)
+        } else {
+            return propertyType
+        }
     }
 }
 
@@ -61,14 +84,6 @@ extension Relax.Configuration.Configurations {
             } ?? []
         }
 
-        discriminatorModifications = configuration.modifications?.discriminators?.compactMap { discriminator in
-            Relax.Configuration.Discriminator(
-                namespace: nil,
-                discriminator: discriminator,
-                addNamePrefix: addNamePrefix
-            )
-        } ?? []
-
         enumerations = configuration.namespaces.flatMap { namespace in
             namespace.enumerations?.compactMap { enumeration in
                 Relax.Configuration.Enumeration(
@@ -78,14 +93,6 @@ extension Relax.Configuration.Configurations {
                 )
             } ?? []
         }
-
-        enumerationModifications = configuration.modifications?.enumerations?.compactMap { enumeration in
-            Relax.Configuration.Enumeration(
-                namespace: nil,
-                enumeration: enumeration,
-                addNamePrefix: addNamePrefix
-            )
-        } ?? []
 
         structures = configuration.namespaces.flatMap { namespace in
             namespace.structures?.compactMap { structure in
@@ -97,19 +104,41 @@ extension Relax.Configuration.Configurations {
             } ?? []
         }
 
-        structureModifications = configuration.modifications?.structures?.compactMap { structure in
-            Relax.Configuration.Structure(
-                namespace: nil,
-                structure: structure,
-                addNamePrefix: addNamePrefix
-            )
-        } ?? []
-
         if platform == .kotlinMoshi {
             kotlinMoshi = Relax.Configuration.KotlinMoshi(
                 kotlinMoshi: configuration.kotlinMoshi,
                 addNamePrefix: addNamePrefix
             )
         }
+
+        discriminators.append(
+            contentsOf: configuration.modifications?.discriminators?.compactMap { discriminator in
+                Relax.Configuration.Discriminator(
+                    namespace: nil,
+                    discriminator: discriminator,
+                    addNamePrefix: addNamePrefix
+                )
+            } ?? []
+        )
+
+        enumerations.append(
+            contentsOf: configuration.modifications?.enumerations?.compactMap { enumeration in
+                Relax.Configuration.Enumeration(
+                    namespace: nil,
+                    enumeration: enumeration,
+                    addNamePrefix: addNamePrefix
+                )
+            } ?? []
+        )
+
+        structures.append(
+            contentsOf: configuration.modifications?.structures?.compactMap { structure in
+                Relax.Configuration.Structure(
+                    namespace: nil,
+                    structure: structure,
+                    addNamePrefix: addNamePrefix
+                )
+            } ?? []
+        )
     }
 }

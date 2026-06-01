@@ -25,17 +25,83 @@
 import Foundation
 
 enum PropertyType: Equatable {
-    case bool
-    case date
-    case double
-    case float
-    case int
-    case int32
-    case int64
-    case object(String)
-    case string
-}
+    case stock(Stock)
+    case schema(Schema)
+    case discriminator(Discriminator)
+    case enumeration(Enumeration)
+    case unknown
 
-extension PropertyType {
-    static let unknown = PropertyType.object("UNKNOWN")
+    enum Stock: Equatable {
+        case bool
+        case date
+        case double
+        case float
+        case int
+        case int32
+        case int64
+        case string
+    }
+
+    var name: String? {
+        switch self {
+        case .stock: nil
+        case let .schema(schema): schema.name
+        case let .discriminator(discriminator): discriminator.name
+        case let .enumeration(enumeration): enumeration.name
+        case .unknown: nil
+        }
+    }
+
+    var schemaName: String? {
+        switch self {
+        case .stock: nil
+        case let .schema(schema): schema.schemaName
+        case let .discriminator(discriminator): discriminator.schemaName
+        case let .enumeration(enumeration): enumeration.schemaName
+        case .unknown: nil
+        }
+    }
+
+    var namespace: String? {
+        switch self {
+        case .stock: nil
+        case let .schema(schema): schema.namespace
+        case let .discriminator(discriminator): discriminator.namespace
+        case let .enumeration(enumeration): enumeration.namespace
+        case .unknown: nil
+        }
+    }
+
+    struct Schema: Equatable {
+        var name: String
+        var schemaName: String?
+        var namespace: String?
+    }
+
+    struct Discriminator: Equatable {
+        var name: String
+        var schemaName: String?
+        var namespace: String?
+
+        var discriminatorPropertyName: String
+        var mapping: [Mapping]
+
+        struct Mapping: Equatable {
+            var value: String
+            var schemaName: String
+        }
+    }
+
+    struct Enumeration: Equatable {
+        var name: String
+        var schemaName: String?
+        var namespace: String?
+
+        var mapping: [Mapping]
+
+        struct Mapping: Equatable {
+            var value: String
+            var name: String
+        }
+    }
 }

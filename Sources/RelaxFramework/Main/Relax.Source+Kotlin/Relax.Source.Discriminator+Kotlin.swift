@@ -24,34 +24,29 @@
 
 import Foundation
 
-extension Relax.Component {
-    func konlinImports(
+extension KotlinSource {
+    func appendDiscriminator(
+        _ discriminator: Relax.Source.Discriminator,
         _ framework: Platform.KotlinFramework,
-        namespace componentNamespace: String
-    ) -> [String] {
-        var imports: Set<String> = []
+        filename: String,
+        includeGeneratedComment: Bool
+    ) {
+        appendHeading(
+            filename: filename,
+            package: discriminator.namespace ?? "UNKNOWN",
+            includeGeneratedComment: includeGeneratedComment
+        )
 
-        switch self {
-        case let .enumeration(enumeration):
-            enumeration.konlinImports(&imports, framework)
-        case let .discriminator(discriminator):
-            discriminator.konlinImports(&imports, framework)
-        case let .structure(structure):
-            structure.konlinImports(&imports, framework, namespace: componentNamespace)
-        }
+        appendDiscriminator(discriminator, framework)
 
-        for enumeration in allChildEnumerations {
-            enumeration.konlinImports(&imports, framework)
-        }
+        append()
 
-        for discriminator in allChildDiscriminators {
-            discriminator.konlinImports(&imports, framework)
-        }
+        resolveImportsPlaceholder()
+    }
 
-        for structure in allChildStructures {
-            structure.konlinImports(&imports, framework, namespace: componentNamespace)
-        }
-
-        return imports.sorted()
+    func appendDiscriminator(
+        _ discriminator: Relax.Source.Discriminator,
+        _ framework: Platform.KotlinFramework
+    ) {
     }
 }

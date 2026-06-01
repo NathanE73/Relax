@@ -36,21 +36,7 @@ extension Relax.Schema {
             var type: PropertyType
             var collectionType: CollectionType?
             var isOptional: Bool
-
-            // TODO: update type to include enumerations and discriminators?
-
-            // TODO: enumeration
-            var values: [String]
-
-            // TODO: discriminator.propertyName
-            // TODO: discriminator.mapping
-            var discriminatorPropertyName: String?
-            var mapping: [Mapping]
-
-            struct Mapping {
-                var value: String
-                var schemaName: String
-            }
+            var value: String?
         }
     }
 }
@@ -61,37 +47,62 @@ extension Relax.Schema.Structure {
         objectContext: JSONSchema.ObjectContext
     ) {
         let properties = objectContext.properties.map { propertyName, property in
-            let values = property.allowedValues?.map(\.description) ?? []
-
-            let discriminatorPropertyName = property.discriminator?.propertyName
-            let mapping = property.discriminator?.mapping?.map { key, value in
-                Property.Mapping(
-                    value: key,
-                    schemaName: String(value.split(separator: "/").last ?? "UNKNOWN")
-                )
-            } ?? []
+            var propertyType: PropertyType
+            let collectionType: CollectionType?
+            let allowedValues: [AnyCodable]?
+            let name: String
+            var value: String?
 
             if let arrayContext = property.arrayContext {
-                return Property(
-                    name: propertyName,
-                    type: arrayContext.items?.propertyType?.propertyType ?? .unknown,
-                    collectionType: .array,
-                    isOptional: property.nullable,
-                    values: values,
-                    discriminatorPropertyName: discriminatorPropertyName,
-                    mapping: mapping
-                )
+                propertyType = arrayContext.items?.propertyType ?? .unknown
+                collectionType = .array
+                allowedValues = arrayContext.items?.allowedValues
+                name = SwiftNaming.name(from: propertyName.removingSuffix("s")) // TODO: ...
             } else {
-                return Property(
-                    name: propertyName,
-                    type: property.propertyType?.propertyType ?? .unknown,
-                    collectionType: nil,
-                    isOptional: property.nullable,
-                    values: values,
-                    discriminatorPropertyName: discriminatorPropertyName,
-                    mapping: mapping
-                )
+                propertyType = property.propertyType ?? .unknown
+                collectionType = nil
+                allowedValues = property.allowedValues
+                name = SwiftNaming.name(from: propertyName)
             }
+
+            if let discriminator = property.discriminator {
+                propertyType = .discriminator(PropertyType.Discriminator(
+                    name: name,
+                    schemaName: nil,
+                    namespace: nil,
+                    discriminatorPropertyName: discriminator.propertyName,
+                    mapping: discriminator.mapping?.map { key, value in
+                        PropertyType.Discriminator.Mapping(
+                            value: key,
+                            schemaName: String(value.split(separator: "/").last ?? "UNKNOWN")
+                        )
+                    } ?? []
+                ))
+            } else if let allowedValues {
+                if allowedValues.count == 1 {
+                    value = allowedValues.first?.description
+                } else {
+                    propertyType = .enumeration(PropertyType.Enumeration(
+                        name: name,
+                        schemaName: nil,
+                        namespace: nil,
+                        mapping: allowedValues.map {
+                            PropertyType.Enumeration.Mapping(
+                                value: $0.description,
+                                name: SwiftNaming.methodName(from: $0.description)
+                            )
+                        }
+                    ))
+                }
+            }
+
+            return Property(
+                name: propertyName,
+                type: propertyType,
+                collectionType: collectionType,
+                isOptional: property.nullable,
+                value: value
+            )
         }
         guard !properties.isEmpty else { return nil }
 

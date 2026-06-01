@@ -24,15 +24,45 @@
 
 import Foundation
 
-extension Relax {
-    protocol FullyQualifiedName {
-        var namespace: String { get }
-        var name: String { get }
+extension Relax.Source {
+    struct Property {
+        var name: String
+        var type: PropertyType
+        var collectionType: CollectionType?
+        var isOptional: Bool
+        var value: String?
     }
 }
 
-extension Relax.FullyQualifiedName {
-    var fullyQualifiedName: String {
-        "\(namespace).\(name)"
+extension [Relax.Source.Property] {
+    var enumerations: [PropertyType.Enumeration] {
+        reduce(into: []) { result, property in
+            if case let .enumeration(enumeration) = property.type {
+                result.append(enumeration)
+            }
+        }
+    }
+}
+
+extension [Relax.Source.Property] {
+    func firstWith(name: String) -> Element? {
+        filter {
+            $0.name == name
+        }.only
+    }
+
+    var uniqueSchemaNames: [String] {
+        compactMap { property in
+            if case let .schema(schema) = property.type {
+                schema.schemaName
+            } else {
+                nil
+            }
+        }
+        .reduce(into: []) { result, schemaName in
+            if !result.contains(schemaName) {
+                result.append(schemaName)
+            }
+        }
     }
 }

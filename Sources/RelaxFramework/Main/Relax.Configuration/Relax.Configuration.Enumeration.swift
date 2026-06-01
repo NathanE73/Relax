@@ -61,6 +61,14 @@ extension Relax.Configuration.Enumeration {
     }
 }
 
+extension [Relax.Configuration.Enumeration] {
+    func firstWith(schemaName: String) -> Element? {
+        first {
+            $0.schemaName == schemaName
+        }
+    }
+}
+
 extension Relax.Configuration.Enumeration.Mapping {
     init?(mapping: RelaxConfiguration.Enumeration.Mapping) {
         guard let name = mapping.name else { return nil }

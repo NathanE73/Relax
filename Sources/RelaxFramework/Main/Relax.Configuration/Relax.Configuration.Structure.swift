@@ -68,11 +68,22 @@ extension Relax.Configuration.Structure {
     }
 }
 
+extension [Relax.Configuration.Structure] {
+    func firstWith(schemaName: String) -> Element? {
+        first {
+            $0.schemaName == schemaName
+        }
+    }
+}
+
 extension Relax.Configuration.Structure.Property {
     init?(property: RelaxConfiguration.Structure.Property) {
         self.init(
             name: property.name,
-            type: property.type == nil ? nil : .object(property.type!),
+            type: property.type == nil ? nil : .schema(PropertyType.Schema(
+                name: property.type!,
+                schemaName: property.type!
+            )),
             discard: property.discard ?? false,
             values: property.values?.compactMap(Value.init) ?? []
         )

@@ -25,28 +25,39 @@
 import Foundation
 
 extension KotlinSource {
-    func appendEnumerations(
-        _ enumerations: [Relax.Enumeration],
-        _ framework: Platform.KotlinFramework
+    func appendEnumeration(
+        _ enumeration: Relax.Source.Enumeration,
+        _ framework: Platform.KotlinFramework,
+        filename: String,
+        includeGeneratedComment: Bool
     ) {
-        for enumeration in enumerations {
-            appendEnumeration(enumeration, framework)
-            append()
-        }
+        appendHeading(
+            filename: filename,
+            package: enumeration.namespace ?? "UNKNOWN",
+            includeGeneratedComment: includeGeneratedComment
+        )
+
+        appendEnumeration(enumeration, framework)
+
+        append()
+
+        resolveImportsPlaceholder()
     }
 
     func appendEnumeration(
-        _ enumeration: Relax.Enumeration,
+        _ enumeration: Relax.Source.Enumeration,
         _ framework: Platform.KotlinFramework
     ) {
         switch framework {
         case .kotlinx:
+            importPackage("kotlinx.serialization.Serializable")
             append("@Serializable")
             append("enum class \(enumeration.name) {")
             indent {
                 for mapping in enumeration.mapping {
                     let mappingName = KotlinNaming.escapeKeyword(KotlinNaming.name(from: mapping.name))
                     if mappingName != mapping.value {
+                        importPackage("kotlinx.serialization.SerialName")
                         append("@SerialName(\"\(mapping.value)\")")
                     }
                     append("\(mappingName),")
@@ -64,6 +75,7 @@ extension KotlinSource {
             indent {
                 for mapping in enumeration.mapping {
                     let mappingName = KotlinNaming.escapeKeyword(KotlinNaming.caseName(from: mapping.name))
+                    importPackage("com.squareup.moshi.Json")
                     append("@Json(name = \"\(mapping.value)\")")
                     append("\(mappingName)(\"\(mapping.value)\"),")
                     append()
@@ -77,7 +89,7 @@ extension KotlinSource {
     }
 }
 
-extension Relax.Enumeration {
+extension Relax.Source.Enumeration {
     var requiresSerialNameImport: Bool {
         !mapping.allSatisfy { mapping in
             let caseName = KotlinNaming.escapeKeyword(KotlinNaming.name(from: mapping.name))
