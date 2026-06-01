@@ -25,7 +25,17 @@
 import Foundation
 
 extension Relax.Source {
-    struct Structure {}
+    struct Structure {
+        var existing: Bool
+
+        var schemaName: String?
+        var namespace: String?
+        var name: String
+        var codable: CodableProtocol
+
+        var identifiablePropertyName: String?
+        var properties: [Component.Property] // TODO: `Component` ?
+    }
 }
 
 extension Relax.Source.Structure {
@@ -34,6 +44,24 @@ extension Relax.Source.Structure {
         schema: Relax.Schema.Structure
     ) {
         self.init(
+            existing: configuration.existing,
+            schemaName: schema.schemaName,
+            namespace: configuration.namespace,
+            name: configuration.name,
+            codable: configuration.codable ?? .codable,
+            identifiablePropertyName: configuration.identifiablePropertyName,
+            properties: schema.properties.compactMap {
+                let property = configuration.properties.firstWith(name: $0.name)
+                guard property?.discard != true else { return nil }
+                return Component.Property(
+                    name: $0.name,
+                    type: property?.type?.propertyType ?? $0.type.propertyType,
+                    typeNamespace: nil,
+                    collectionType: $0.collectionType,
+                    isOptional: $0.isOptional,
+                    value: nil // TODO: ...
+                )
+            }
         )
     }
 }

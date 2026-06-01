@@ -46,7 +46,7 @@ extension SwiftSource {
         append("enum \(discriminator.name): \(protocols)") {
             for mapping in discriminator.mapping {
                 let mappingName = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: mapping.name))
-                append("case \(mappingName)(\(mapping.type))")
+                append("case \(mappingName)(\(mapping.name))")
             }
 
             append()
@@ -92,7 +92,7 @@ extension SwiftSource {
                     let mappingName = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: mapping.name))
                     append("case .\(mappingName):")
                     indent {
-                        append("try .\(mappingName)(decode(\(discriminator.fullyQualifiedName).\(mapping.type).self, forKey: key))")
+                        append("try .\(mappingName)(decode(\(discriminator.fullyQualifiedName).\(mapping.name).self, forKey: key))")
                     }
                 }
                 append("}")
@@ -111,7 +111,7 @@ extension SwiftSource {
                         let mappingName = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: mapping.name))
                         append("case .\(mappingName):")
                         indent {
-                            append("try elements.append(.\(mappingName)(elementContainer.decode(\(discriminator.fullyQualifiedName).\(mapping.type).self)))")
+                            append("try elements.append(.\(mappingName)(elementContainer.decode(\(discriminator.fullyQualifiedName).\(mapping.name).self)))")
                         }
                     }
                     append("}")

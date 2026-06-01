@@ -36,7 +36,6 @@ extension Relax.Source {
         var discriminatorPropertyName: String
         var mapping: [Mapping]
         var enumeration: Enumeration
-        var structures: [Structure]
 
         struct DiscriminatorProperty {
             var name: String
@@ -84,8 +83,7 @@ extension Relax.Source.Discriminator {
                         name: mapping?.name ?? $0.value.firstCharacterLowercased // TODO: ...
                     )
                 }
-            ),
-            structures: [] // TODO: ...
+            )
         )
     }
 }
@@ -95,6 +93,39 @@ extension Relax.Source.Discriminator {
         configuration: Relax.Configuration.Discriminator,
         schema: Relax.Schema.Structure
     ) {
-        nil
+        guard let propertyName = configuration.propertyName else { return nil }
+
+        guard let property = schema.properties.firstWith(name: propertyName) else { return nil }
+
+        self.init(
+            existing: configuration.existing,
+            schemaName: nil,
+            namespace: configuration.namespace,
+            name: configuration.name,
+            codable: configuration.codable ?? .codable,
+            discriminatorPropertyName: property.name,
+            mapping: property.mapping.map {
+                let mapping = configuration.mapping?.firstWith(value: $0.value)
+                return Relax.Source.Discriminator.Mapping(
+                    value: $0.value,
+                    schemaName: $0.schemaName,
+                    name: mapping?.name ?? $0.value.firstCharacterUppercased // TODO: ...
+                )
+            },
+            enumeration: Relax.Source.Enumeration(
+                existing: false,
+                schemaName: nil,
+                namespace: nil,
+                name: property.discriminatorPropertyName?.firstCharacterUppercased ?? "UNKNOWN", // TODO: ...
+                codable: configuration.codable ?? .codable,
+                mapping: property.mapping.map {
+                    let mapping = configuration.mapping?.firstWith(value: $0.value)
+                    return Relax.Source.Enumeration.Mapping(
+                        value: $0.value,
+                        name: mapping?.name ?? $0.value.firstCharacterLowercased // TODO: ...
+                    )
+                }
+            )
+        )
     }
 }

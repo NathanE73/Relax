@@ -62,7 +62,7 @@ extension Component.Discriminator {
         mapping.map { mapping in
             Relax.Discriminator.Mapping(
                 value: mapping.value,
-                type: SwiftNaming.name(from: mapping.name),
+                type: mapping.schemaName,
                 name: mapping.name
             )
         }
@@ -109,12 +109,19 @@ extension Component.Discriminator {
             if var structure = globalStructures.firstWith(namespace: discriminatorNamespace, schemaName: mapping.schemaName), structure.namespace == nil {
                 structure.codable = codable
                 structure.name = SwiftNaming.name(from: mapping.name)
+                structure.properties = structure.properties.map { property in
+                    var property = property
+                    if property.name == discriminatorProperty.name {
+                        property.type = .object(discriminatorProperty.type)
+                    }
+                    return property
+                }
                 return structure.relaxStructure(
                     namespace: fullyQualifiedName,
                     discriminatorProperty: Component.Structure.DiscriminatorProperty(
-                        name: discriminatorProperty.name,
+                        name: mapping.name, // discriminatorProperty.name,
                         type: discriminatorProperty.type,
-                        value: mapping.name
+                        value: mapping.value
                     )
                 )
             }

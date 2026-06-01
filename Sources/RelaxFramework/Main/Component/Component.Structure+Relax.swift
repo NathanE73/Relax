@@ -50,10 +50,16 @@ extension Component.Structure {
             name: name,
             codable: codable ?? .codable,
             identifiablePropertyName: identifiablePropertyName,
-            properties: relaxProperties(namespace: structureNamespace, discriminatorProperty: discriminatorProperty),
+            properties: relaxProperties(
+                namespace: structureNamespace,
+                discriminatorProperty: discriminatorProperty
+            ),
             discriminators: relaxDiscriminators(),
             enumerations: relaxEnumerations(discriminatorProperty: discriminatorProperty),
-            structures: relaxStructures(namespace: structureNamespace)
+            structures: relaxStructures(
+                namespace: structureNamespace,
+                discriminatorProperty: discriminatorProperty
+            )
         )
     }
 
@@ -127,11 +133,21 @@ extension Component.Structure {
     }
 
     func relaxStructures(
-        namespace structureNamespace: String
+        namespace structureNamespace: String,
+        discriminatorProperty: DiscriminatorProperty?
     ) -> [Relax.Structure] {
         properties.uniqueSchemaNames.compactMap { schemaName -> Relax.Structure? in
             if var structure = globalStructures.firstWith(namespace: structureNamespace, schemaName: schemaName), structure.namespace == nil {
                 structure.codable = structure.codable ?? codable
+                if let discriminatorProperty {
+                    structure.properties = structure.properties.map { property in
+                        var property = property
+                        if property.name == discriminatorProperty.name {
+                            property.type = .object(discriminatorProperty.type)
+                        }
+                        return property
+                    }
+                }
                 return structure.relaxStructure(
                     namespace: fullyQualifiedName
                 )

@@ -43,7 +43,7 @@ extension Relax.Source {
 }
 
 extension Relax.Source.Enumeration {
-    init(
+    init?(
         configuration: Relax.Configuration.Enumeration,
         schema: Relax.Schema.Enumeration
     ) {

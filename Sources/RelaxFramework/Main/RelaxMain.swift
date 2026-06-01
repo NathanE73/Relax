@@ -86,13 +86,16 @@ public struct RelaxMain {
             platform: command.platform
         )
 
-        _ = Relax.Configuration.Configurations(
+        relaxConfigurations = Relax.Configuration.Configurations(
             configuration: configuration,
             platform: command.platform
         )
 
-        _ = Relax.Schema.Schemas(document: documents.first!)
+        relaxSchemas = Relax.Schema.Schemas(document: documents.first!)
     }
+
+    var relaxConfigurations: Relax.Configuration.Configurations
+    var relaxSchemas: Relax.Schema.Schemas
 
     public static func main() {
         do {
@@ -126,7 +129,13 @@ public struct RelaxMain {
     func run() throws {
         guard let document = documents.first else { return }
 
+        let sources = Relax.Source.Sources(
+            configurations: relaxConfigurations,
+            schemas: relaxSchemas
+        )
+
         let components = Component.Components(
+            sources: sources,
             configurations: configurations,
             document: document
         )

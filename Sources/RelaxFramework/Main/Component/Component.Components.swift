@@ -35,11 +35,27 @@ extension Component {
 
 extension Component.Components {
     init(
+        sources: Relax.Source.Sources,
         configurations: Configuration.Configurations,
         document: OpenAPIKit.OpenAPI.Document
     ) {
-        enumerations = configurations.enumerations.compactMap { configuration in
-            configuration.componentEnumeration(document: document)
+//        enumerations = configurations.enumerations.compactMap { configuration in
+//            configuration.componentEnumeration(document: document)
+//        }
+        enumerations = sources.enumerations.map {
+            Component.Enumeration(
+                existing: $0.existing,
+                schemaName: $0.schemaName,
+                namespace: $0.namespace,
+                name: $0.name,
+                codable: $0.codable,
+                mapping: $0.mapping.map {
+                    Component.Enumeration.Mapping(
+                        value: $0.value,
+                        name: $0.name
+                    )
+                }
+            )
         }
 
         // TODO: remove
@@ -51,14 +67,63 @@ extension Component.Components {
             configuration.componentDiscriminator(document: document)
         }
 
+//        discriminators = sources.discriminators.map {
+//            Component.Discriminator(
+//                existing: $0.existing,
+//                schemaName: $0.schemaName,
+//                namespace: $0.namespace,
+//                name: $0.name,
+//                codable: $0.codable,
+//                discriminatorProperty: Component.Discriminator.DiscriminatorProperty(
+//                    name: $0.discriminatorPropertyName,
+//                    type: $0.enumeration.name
+//                ),
+//                mapping: $0.mapping.map {
+//                    Component.Discriminator.Mapping(
+//                        value: $0.value,
+//                        schemaName: $0.schemaName,
+//                        name: $0.name
+//                    )
+//                },
+//                enumeration: Component.Enumeration(
+//                    existing: false,
+//                    schemaName: nil,
+//                    namespace: nil,
+//                    name: $0.enumeration.name,
+//                    codable: $0.codable,
+//                    mapping: $0.enumeration.mapping.map {
+//                        Component.Enumeration.Mapping(
+//                            value: $0.value,
+//                            name: $0.name
+//                        )
+//                    }
+//                ),
+//                sharedProperties: [] // TODO: ...
+//            )
+//        }
+
         // TODO: remove
         globalDiscriminators = discriminators
         // print("Number of enumerations: \(discriminators.count)")
         // print("  - \(discriminators.map(\.name).sorted().joined(separator: "\n  - "))")
 
+        structures = []
+
         structures = configurations.structures.compactMap { configuration in
             configuration.componentStructure(document: document)
         }
+        structures = sources.structures.map {
+            Component.Structure(
+                existing: $0.existing,
+                schemaName: $0.schemaName,
+                namespace: $0.namespace,
+                name: $0.name,
+                codable: $0.codable,
+                identifiablePropertyName: $0.identifiablePropertyName,
+                properties: $0.properties
+            )
+        }
+
         structures.append(contentsOf: missingGlobalStructures(document, structures))
 
         // TODO: remove

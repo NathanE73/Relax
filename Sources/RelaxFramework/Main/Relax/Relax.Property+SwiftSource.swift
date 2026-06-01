@@ -25,12 +25,17 @@
 import Foundation
 
 extension SwiftSource {
-    func appendProperty(_ property: Relax.Property, currentNamespace: String?) {
+    func appendProperty(
+        _ property: Relax.Property,
+        currentNamespace: String?
+    ) {
         if let value = property.value {
             switch property.type {
             case let .object(object):
                 let objectValue = SwiftNaming.escapeKeyword(SwiftNaming.methodName(from: value))
                 append("let \(property.name) = \(object).\(objectValue)")
+            case .string:
+                append("let \(property.name) = \"\(value)\"")
             default:
                 append("let \(property.name) = \(value)")
             }

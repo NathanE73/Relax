@@ -36,7 +36,21 @@ extension Relax.Schema {
             var type: PropertyType
             var collectionType: CollectionType?
             var isOptional: Bool
+
+            // TODO: update type to include enumerations and discriminators?
+
+            // TODO: enumeration
             var values: [String]
+
+            // TODO: discriminator.propertyName
+            // TODO: discriminator.mapping
+            var discriminatorPropertyName: String?
+            var mapping: [Mapping]
+
+            struct Mapping {
+                var value: String
+                var schemaName: String
+            }
         }
     }
 }
@@ -48,13 +62,24 @@ extension Relax.Schema.Structure {
     ) {
         let properties = objectContext.properties.map { propertyName, property in
             let values = property.allowedValues?.map(\.description) ?? []
+
+            let discriminatorPropertyName = property.discriminator?.propertyName
+            let mapping = property.discriminator?.mapping?.map { key, value in
+                Property.Mapping(
+                    value: key,
+                    schemaName: String(value.split(separator: "/").last ?? "UNKNOWN")
+                )
+            } ?? []
+
             if let arrayContext = property.arrayContext {
                 return Property(
                     name: propertyName,
                     type: arrayContext.items?.propertyType?.propertyType ?? .unknown,
                     collectionType: .array,
                     isOptional: property.nullable,
-                    values: values
+                    values: values,
+                    discriminatorPropertyName: discriminatorPropertyName,
+                    mapping: mapping
                 )
             } else {
                 return Property(
@@ -62,7 +87,9 @@ extension Relax.Schema.Structure {
                     type: property.propertyType?.propertyType ?? .unknown,
                     collectionType: nil,
                     isOptional: property.nullable,
-                    values: values
+                    values: values,
+                    discriminatorPropertyName: discriminatorPropertyName,
+                    mapping: mapping
                 )
             }
         }

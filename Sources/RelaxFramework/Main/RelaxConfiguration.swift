@@ -163,6 +163,7 @@ extension RelaxConfiguration {
     }
 }
 
+// TODO: remove...
 extension RelaxConfiguration {
     func addNamePrefix(_ name: String) -> String {
         if let namePrefix = naming?.prefix {

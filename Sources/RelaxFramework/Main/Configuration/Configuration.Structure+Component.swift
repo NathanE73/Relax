@@ -167,7 +167,7 @@ extension Configuration.Structure {
         allowedValues: [AnyCodable]
     ) {
         if allowedValues.count == 1 {
-            propertyValue = "\"\(allowedValues.first?.description ?? "")\""
+            propertyValue = allowedValues.first?.description ?? ""
         } else if let enumeration = globalEnumerations.firstWith(
             values: Set(allowedValues.map(\.description))
         ) {

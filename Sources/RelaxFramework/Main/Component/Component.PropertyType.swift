@@ -99,6 +99,7 @@ extension PropertyType {
     }
 }
 
+// TODO: ???
 extension JSONSchema {
     var propertyType: Component.PropertyType? {
         if isArray {

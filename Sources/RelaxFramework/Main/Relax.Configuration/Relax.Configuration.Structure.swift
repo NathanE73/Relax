@@ -88,3 +88,11 @@ extension Relax.Configuration.Structure.Property.Value {
         )
     }
 }
+
+extension [Relax.Configuration.Structure.Property] {
+    func firstWith(name: String) -> Element? {
+        first {
+            $0.name == name
+        }
+    }
+}
