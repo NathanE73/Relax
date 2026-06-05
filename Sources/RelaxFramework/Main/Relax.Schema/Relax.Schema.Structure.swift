@@ -44,7 +44,8 @@ extension Relax.Schema {
 extension Relax.Schema.Structure {
     init?(
         schemaName: String,
-        objectContext: JSONSchema.ObjectContext
+        objectContext: JSONSchema.ObjectContext,
+        naming: SourceNaming
     ) {
         let properties = objectContext.properties.map { propertyName, property in
             var propertyType: PropertyType
@@ -57,12 +58,12 @@ extension Relax.Schema.Structure {
                 propertyType = arrayContext.items?.propertyType ?? .unknown
                 collectionType = .array
                 allowedValues = arrayContext.items?.allowedValues
-                name = SwiftNaming.name(from: propertyName.removingSuffix("s")) // TODO: ...
+                name = naming.typeName(propertyName.removingSuffix("s")) // TODO: ...
             } else {
                 propertyType = property.propertyType ?? .unknown
                 collectionType = nil
                 allowedValues = property.allowedValues
-                name = SwiftNaming.name(from: propertyName)
+                name = naming.typeName(propertyName)
             }
 
             if let discriminator = property.discriminator {
@@ -89,7 +90,7 @@ extension Relax.Schema.Structure {
                         mapping: allowedValues.map {
                             PropertyType.Enumeration.Mapping(
                                 value: $0.description,
-                                name: SwiftNaming.methodName(from: $0.description)
+                                name: naming.caseName($0.description)
                             )
                         }
                     ))

@@ -35,7 +35,8 @@ extension Relax.Schema {
 
 extension Relax.Schema.Schemas {
     init(
-        document: OpenAPIKit.OpenAPI.Document
+        document: OpenAPIKit.OpenAPI.Document,
+        naming: SourceNaming
     ) {
         discriminators = []
         enumerations = []
@@ -64,7 +65,8 @@ extension Relax.Schema.Schemas {
             } else if let objectContext = schema.objectContext {
                 if let structure = Relax.Schema.Structure(
                     schemaName: schemaName,
-                    objectContext: objectContext
+                    objectContext: objectContext,
+                    naming: naming
                 ) {
                     structures.append(structure)
                 } else {

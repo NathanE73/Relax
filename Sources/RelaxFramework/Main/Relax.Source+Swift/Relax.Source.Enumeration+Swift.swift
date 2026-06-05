@@ -32,9 +32,10 @@ extension SwiftSource {
     ) {
         appendHeading(
             filename: filename,
-            imports: ["Foundation"],
             includeGeneratedComment: includeGeneratedComment
         )
+
+        importPackage("Foundation")
 
         if let namespace = enumeration.namespace {
             append("extension \(namespace)") {
@@ -45,6 +46,8 @@ extension SwiftSource {
         }
 
         append()
+
+        resolveImportsPlaceholder()
     }
 
     func appendEnumeration(
@@ -55,7 +58,7 @@ extension SwiftSource {
 
         indent {
             for mapping in enumeration.mapping {
-                let name = SwiftNaming.escapeKeyword(mapping.name)
+                let name = escapeKeyword(mapping.name)
                 if mapping.name != mapping.value {
                     append("case \(name) = \"\(mapping.value)\"")
                 } else {

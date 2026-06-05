@@ -25,6 +25,10 @@
 import Foundation
 
 class KotlinSource: Source {
+    func escapeKeyword(_ identifier: String) -> String {
+        KotlinNaming.escapeKeyword(identifier)
+    }
+
     func appendHeading(
         filename: String,
         package: String?,

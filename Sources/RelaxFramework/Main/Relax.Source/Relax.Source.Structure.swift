@@ -25,7 +25,7 @@
 import Foundation
 
 extension Relax.Source {
-    struct Structure {
+    struct Structure: FullyQualifiedName {
         var existing: Bool
 
         var schemaName: String?
@@ -72,5 +72,25 @@ extension [Relax.Source.Structure] {
         filter {
             $0.schemaName == schemaName
         }.only
+    }
+
+    func sharedProperties() -> [Relax.Source.Property] {
+        guard let firstStructure = first else { return [] }
+
+        let otherStructures = dropFirst()
+
+        return firstStructure.properties.reduce(into: []) { result, property in
+            let sharedProperty = property
+
+            for otherStructure in otherStructures {
+                guard let otherProperty = otherStructure.properties.firstWith(name: property.name)
+                else { return }
+                let otherSharedProperty = otherProperty
+                guard sharedProperty == otherSharedProperty
+                else { return }
+            }
+
+            result.append(sharedProperty)
+        }
     }
 }

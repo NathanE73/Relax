@@ -24,22 +24,19 @@
 
 import Foundation
 
-enum Platform {
-    case kotlin(KotlinFramework)
-    case swift
-
-    enum KotlinFramework {
-        case kotlinx
-        case moshi
+extension Relax.Source {
+    protocol FullyQualifiedName {
+        var namespace: String? { get }
+        var name: String { get }
     }
 }
 
-extension Platform {
-    var naming: SourceNaming {
-        switch self {
-        case .kotlin(.kotlinx): KotlinKotlinxSourceNaming()
-        case .kotlin(.moshi): KotlinMoshiSourceNaming()
-        case .swift: SwiftSourceNaming()
+extension Relax.Source.FullyQualifiedName {
+    var fullyQualifiedName: String {
+        if let namespace {
+            "\(namespace).\(name)"
+        } else {
+            name
         }
     }
 }

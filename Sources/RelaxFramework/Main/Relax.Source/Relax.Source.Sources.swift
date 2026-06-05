@@ -35,18 +35,21 @@ extension Relax.Source {
 extension Relax.Source.Sources {
     init(
         configurations: Relax.Configuration.Configurations,
-        schemas: Relax.Schema.Schemas
+        schemas: Relax.Schema.Schemas,
+        platform: Platform
     ) {
         enumerations = configurations.enumerations.compactMap { configuration in
             if let schema = schemas.enumerations.firstWith(schemaName: configuration.schemaName) {
                 Relax.Source.Enumeration(
                     configuration: configuration,
-                    schema: schema
+                    schema: schema,
+                    naming: platform.naming
                 )
             } else if let schema = schemas.structures.firstWith(schemaName: configuration.schemaName) {
                 Relax.Source.Enumeration(
                     configuration: configuration,
-                    schema: schema
+                    schema: schema,
+                    naming: platform.naming
                 )
             } else {
                 nil
@@ -57,12 +60,14 @@ extension Relax.Source.Sources {
             if let schema = schemas.discriminators.firstWith(schemaName: configuration.schemaName) {
                 Relax.Source.Discriminator(
                     configuration: configuration,
-                    schema: schema
+                    schema: schema,
+                    naming: platform.naming
                 )
             } else if let schema = schemas.structures.firstWith(schemaName: configuration.schemaName) {
                 Relax.Source.Discriminator(
                     configuration: configuration,
-                    schema: schema
+                    schema: schema,
+                    naming: platform.naming
                 )
             } else {
                 nil
@@ -86,7 +91,8 @@ extension Relax.Source.Sources {
             if !enumerationSchemaNames.contains(schema.schemaName) {
                 Relax.Source.Enumeration(
                     configuration: nil,
-                    schema: schema
+                    schema: schema,
+                    naming: platform.naming
                 )
             } else {
                 nil
@@ -98,7 +104,8 @@ extension Relax.Source.Sources {
             if !discriminatorSchemaNames.contains(schema.schemaName) {
                 Relax.Source.Discriminator(
                     configuration: nil,
-                    schema: schema
+                    schema: schema,
+                    naming: platform.naming
                 )
             } else {
                 nil

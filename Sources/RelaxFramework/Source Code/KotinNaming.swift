@@ -29,6 +29,27 @@ enum KotlinNaming {
         identifier
     }
 
+    static func methodName(from identifier: String, numberPrefix: Bool = false, prefix: String? = nil) -> String {
+        var name = identifier
+
+        if numberPrefix, name.startsWithDecimalDigit {
+            name = "number\(name)"
+        }
+
+        if let prefix {
+            name = "\(prefix).\(name)"
+        }
+
+        name = self.name(from: name, prefix: prefix)
+            .firstCharacterLowercased
+
+        if !numberPrefix, name.startsWithDecimalDigit {
+            name = "_\(name)"
+        }
+
+        return name
+    }
+
     static func name(from identifier: String, prefix _: String? = nil) -> String {
         identifier.split { character in
             for unicodeScalar in character.unicodeScalars {

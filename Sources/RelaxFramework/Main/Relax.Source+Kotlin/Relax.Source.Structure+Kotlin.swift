@@ -38,7 +38,7 @@ extension KotlinSource {
             includeGeneratedComment: includeGeneratedComment
         )
 
-        appendStructure(structure, sources, framework)
+        appendStructure(structure, sources, framework, discriminator: nil, sharedProperties: [], currentNamespace: structure.namespace)
 
         append()
 
@@ -48,21 +48,56 @@ extension KotlinSource {
     func appendStructure(
         _ structure: Relax.Source.Structure,
         _ sources: Relax.Source.Sources,
-        _ framework: Platform.KotlinFramework
+        _ framework: Platform.KotlinFramework,
+        discriminator: Relax.Source.Discriminator?,
+        sharedProperties: [Relax.Source.Property],
+        currentNamespace: String?
     ) {
+        if let schemaName = structure.schemaName, schemaName != structure.name {
+            // TODO: append("/// \(schemaName)")
+        }
+
+        let something: String
         switch framework {
         case .kotlinx:
             importPackage("kotlinx.serialization.Serializable")
             append("@Serializable")
+            if let discriminator {
+                let property = structure.properties.firstWith(name: discriminator.discriminatorPropertyName)
+                let propertyValue = property?.value ?? "UNKNOWN"
+
+                let enumerationName = escapeKeyword(discriminator.enumeration.mapping.first { $0.value == propertyValue }?.name ?? "UNKNOWN")
+                something = " : \(discriminator.name)(\(discriminator.enumeration.name).\(enumerationName))"
+
+                importPackage("kotlinx.serialization.SerialName")
+                append("@SerialName(\"\(propertyValue)\")")
+            } else {
+                something = ""
+            }
         case .moshi:
+            if let discriminator {
+                let property = structure.properties.firstWith(name: discriminator.discriminatorPropertyName)
+                let propertyValue = property?.value ?? "UNKNOWN"
+
+                let enumerationName = escapeKeyword(discriminator.enumeration.mapping.first { $0.value == propertyValue }?.name ?? "UNKNOWN")
+                something = " : \(discriminator.name)(\(discriminator.enumeration.name).\(enumerationName))"
+            } else {
+                something = ""
+            }
+
             importPackage("com.squareup.moshi.JsonClass")
             append("@JsonClass(generateAdapter = true)")
         }
 
         append("data class \(structure.name)(")
         indent {
+            let sharedPropertyNames = sharedProperties.map(\.name)
             for property in structure.properties {
-                appendProperty(property, framework, override: false)
+                if discriminator?.discriminatorPropertyName == property.name {
+                    continue
+                }
+                let override = sharedPropertyNames.contains(property.name)
+                appendProperty(property, framework, override: override, currentNamespace: currentNamespace)
             }
 
             removeLastBlankLine()
@@ -74,9 +109,9 @@ extension KotlinSource {
         let enumerations = structure.properties.enumerations
 
         if enumerations.isEmpty {
-            append(")")
+            append(")\(something)")
         } else {
-            append(")") {
+            append(")\(something)") {
                 for enumeration in enumerations {
                     let enumeration = Relax.Source.Enumeration(
                         existing: false,
@@ -102,7 +137,7 @@ extension KotlinSource {
                 if innerStructure.namespace == nil {
                     innerStructure.codable = structure.codable
                     append()
-                    appendStructure(innerStructure, sources, framework)
+                    appendStructure(innerStructure, sources, framework, discriminator: nil, sharedProperties: [], currentNamespace: currentNamespace)
                 }
             }
         }

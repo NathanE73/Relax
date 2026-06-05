@@ -25,57 +25,46 @@
 import Foundation
 
 class SwiftSource: Source {
+    func escapeKeyword(_ identifier: String) -> String {
+        SwiftNaming.escapeKeyword(identifier)
+    }
+
     func appendHeading(
         filename: String,
-        imports: [String] = [],
-        publicImports: [String] = [],
-        includeGeneratedComment: Bool,
-        includeBundle: Bool = false
+        includeGeneratedComment: Bool
     ) {
         if includeGeneratedComment {
             appendHeaderComment(filename: filename)
         }
 
-        for module in imports {
-            append("import \(module)")
-        }
+        insertImportsPlaceholder()
+    }
 
-        append()
+    // MARK: - Import Packages
 
-        if !publicImports.isEmpty {
-            append("#if hasFeature(InternalImportsByDefault)")
-            indent {
-                for module in publicImports {
-                    append("public import \(module)")
-                }
-            }
-            append("#else")
-            indent {
-                for module in publicImports {
-                    append("import \(module)")
-                }
-            }
-            append("#endif")
-        }
+    var packages: Set<String> = []
 
-        append()
+    func insertImportsPlaceholder() {
+        insertPlaceholder("imports")
+    }
 
-        if includeBundle {
-            append("private let bundle: Bundle = {")
-            indent {
-                append("#if SWIFT_PACKAGE")
-                indent {
-                    append("Bundle.module")
-                }
-                append("#else")
-                indent {
-                    append("class Object: NSObject {}")
-                    append("return Bundle(for: Object.self)")
-                }
-                append("#endif")
-            }
-            append("}()")
-            append()
+    func importPackage(_ package: String?) {
+        if let package {
+            packages.insert(package)
         }
     }
+
+    func resolveImportsPlaceholder() {
+        resolvePlaceholder("imports") {
+            for module in Set(packages).sorted() {
+                append("import \(module)")
+            }
+            append()
+        }
+        packages = []
+    }
+
+    // MARK: - Discriminators
+
+    var discriminators: [Relax.Source.Discriminator] = []
 }

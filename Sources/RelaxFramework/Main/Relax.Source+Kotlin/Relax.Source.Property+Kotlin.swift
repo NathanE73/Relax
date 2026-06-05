@@ -28,14 +28,15 @@ extension KotlinSource {
     func appendProperty(
         _ property: Relax.Source.Property,
         _ framework: Platform.KotlinFramework,
-        override: Bool
+        override: Bool,
+        currentNamespace: String?
     ) {
         let override = override ? "override " : ""
 
         let type = property.type.kotlinName(for: framework)
 
         if case let .schema(schema) = property.type {
-            if let namespace = schema.namespace {
+            if let namespace = schema.namespace, namespace != currentNamespace {
                 importPackage("\(namespace).\(schema.name)")
             }
         } else {

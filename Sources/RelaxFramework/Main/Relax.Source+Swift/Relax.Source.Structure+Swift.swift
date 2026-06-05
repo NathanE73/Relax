@@ -29,29 +29,47 @@ extension SwiftSource {
         _ structure: Relax.Source.Structure,
         _ sources: Relax.Source.Sources,
         filename: String,
-        includeGeneratedComment: Bool
+        includeGeneratedComment: Bool,
+        naming: SourceNaming
     ) {
         appendHeading(
             filename: filename,
-            imports: ["Foundation"],
             includeGeneratedComment: includeGeneratedComment
         )
 
+        importPackage("Foundation")
+
         if let namespace = structure.namespace {
             append("extension \(namespace)") {
-                appendStructure(structure, sources, currentNamespace: namespace)
+                appendStructure(structure, sources, currentNamespace: namespace, discriminatorPropertyName: nil, naming: naming)
             }
         } else {
-            appendStructure(structure, sources, currentNamespace: nil)
+            appendStructure(structure, sources, currentNamespace: nil, discriminatorPropertyName: nil, naming: naming)
         }
 
         append()
+
+        for discriminator in discriminators {
+            if discriminator.codable.isDecodable {
+                appendDecodableDiscriminator(discriminator)
+            }
+
+            if discriminator.codable.isEncodable {
+                appendEncodableDiscriminator(discriminator)
+            }
+
+            append()
+        }
+
+        resolveImportsPlaceholder()
     }
 
     func appendStructure(
         _ structure: Relax.Source.Structure,
         _ sources: Relax.Source.Sources,
-        currentNamespace: String?
+        currentNamespace: String?,
+        discriminatorPropertyName: String?,
+        naming: SourceNaming
     ) {
         let isIdentifiable = structure.identifiablePropertyName != nil || structure.properties.firstWith(name: "id") != nil
 
@@ -75,6 +93,9 @@ extension SwiftSource {
             }
 
             for property in structure.properties {
+                if !structure.codable.isEncodable, property.name == discriminatorPropertyName {
+                    continue
+                }
                 appendProperty(property, currentNamespace: currentNamespace)
             }
 
@@ -83,7 +104,40 @@ extension SwiftSource {
             // TODO: interleave discriminators, enumerations, and structures?
 
             for property in structure.properties {
-                if case let .enumeration(enumeration) = property.type {
+                switch property.type {
+                case let .discriminator(discriminator):
+                    let discriminator = Relax.Source.Discriminator(
+                        existing: false,
+                        schemaName: nil,
+                        namespace: nil,
+                        name: discriminator.name,
+                        codable: structure.codable,
+                        discriminatorPropertyName: discriminator.discriminatorPropertyName,
+                        mapping: discriminator.mapping.map {
+                            Relax.Source.Discriminator.Mapping(
+                                value: $0.value,
+                                schemaName: $0.schemaName,
+                                name: naming.typeName($0.value)
+                            )
+                        },
+                        enumeration: Relax.Source.Enumeration(
+                            existing: false,
+                            schemaName: nil,
+                            namespace: nil,
+                            name: naming.typeName(discriminator.discriminatorPropertyName),
+                            codable: structure.codable,
+                            mapping: discriminator.mapping.map {
+                                Relax.Source.Enumeration.Mapping(
+                                    value: $0.value,
+                                    name: naming.caseName($0.value)
+                                )
+                            }
+                        )
+                    )
+                    discriminators.append(discriminator)
+                    append()
+                    appendDiscriminator(discriminator, sources, naming: naming)
+                case let .enumeration(enumeration):
                     let enumeration = Relax.Source.Enumeration(
                         existing: false,
                         schemaName: nil,
@@ -99,6 +153,8 @@ extension SwiftSource {
                     )
                     append()
                     appendEnumeration(enumeration)
+                default:
+                    break
                 }
             }
 
@@ -107,7 +163,7 @@ extension SwiftSource {
                     if innerStructure.namespace == nil {
                         innerStructure.codable = structure.codable
                         append()
-                        appendStructure(innerStructure, sources, currentNamespace: currentNamespace)
+                        appendStructure(innerStructure, sources, currentNamespace: currentNamespace, discriminatorPropertyName: nil, naming: naming)
                     }
                 }
             }

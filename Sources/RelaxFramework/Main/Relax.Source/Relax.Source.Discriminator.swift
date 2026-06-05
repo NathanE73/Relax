@@ -25,7 +25,7 @@
 import Foundation
 
 extension Relax.Source {
-    struct Discriminator {
+    struct Discriminator: FullyQualifiedName {
         var existing: Bool
 
         var schemaName: String?
@@ -37,10 +37,8 @@ extension Relax.Source {
         var mapping: [Mapping]
         var enumeration: Enumeration
 
-        struct DiscriminatorProperty {
-            var name: String
-            var type: String
-        }
+        // var stuctures: [Structure]
+        // TODO: computed property on [] for shared properties
 
         struct Mapping {
             var value: String
@@ -53,7 +51,8 @@ extension Relax.Source {
 extension Relax.Source.Discriminator {
     init?(
         configuration: Relax.Configuration.Discriminator?,
-        schema: Relax.Schema.Discriminator
+        schema: Relax.Schema.Discriminator,
+        naming: SourceNaming
     ) {
         self.init(
             existing: configuration?.existing ?? false,
@@ -64,34 +63,34 @@ extension Relax.Source.Discriminator {
             discriminatorPropertyName: schema.discriminatorPropertyName,
             mapping: schema.mapping.map {
                 let mapping = configuration?.mapping?.firstWith(value: $0.value)
+                let name = mapping?.name ?? naming.typeName($0.value)
                 return Relax.Source.Discriminator.Mapping(
                     value: $0.value,
                     schemaName: $0.schemaName,
-                    name: mapping?.name ?? $0.value.firstCharacterUppercased // TODO: ...
+                    name: name
                 )
             },
             enumeration: Relax.Source.Enumeration(
                 existing: false,
                 schemaName: nil,
                 namespace: nil,
-                name: schema.discriminatorPropertyName.firstCharacterUppercased, // TODO: ...
+                name: naming.typeName(schema.discriminatorPropertyName),
                 codable: configuration?.codable ?? .codable,
                 mapping: schema.mapping.map {
                     let mapping = configuration?.mapping?.firstWith(value: $0.value)
                     return Relax.Source.Enumeration.Mapping(
                         value: $0.value,
-                        name: mapping?.name ?? $0.value.firstCharacterLowercased // TODO: ...
+                        name: mapping?.name ?? naming.caseName($0.value)
                     )
                 }
             )
         )
     }
-}
 
-extension Relax.Source.Discriminator {
     init?(
         configuration: Relax.Configuration.Discriminator,
-        schema: Relax.Schema.Structure
+        schema: Relax.Schema.Structure,
+        naming: SourceNaming
     ) {
         guard let propertyName = configuration.propertyName else { return nil }
 
@@ -105,26 +104,28 @@ extension Relax.Source.Discriminator {
             namespace: configuration.namespace,
             name: configuration.name,
             codable: configuration.codable ?? .codable,
-            discriminatorPropertyName: property.name,
+            discriminatorPropertyName: discriminator.discriminatorPropertyName,
             mapping: discriminator.mapping.map {
                 let mapping = configuration.mapping?.firstWith(value: $0.value)
+                let name = mapping?.name ?? naming.typeName($0.value)
                 return Relax.Source.Discriminator.Mapping(
                     value: $0.value,
                     schemaName: $0.schemaName,
-                    name: mapping?.name ?? $0.value.firstCharacterUppercased // TODO: ...
+                    name: name
                 )
             },
             enumeration: Relax.Source.Enumeration(
                 existing: false,
                 schemaName: nil,
                 namespace: nil,
-                name: discriminator.discriminatorPropertyName.firstCharacterUppercased, // TODO: ...
+                name: naming.typeName(discriminator.discriminatorPropertyName),
                 codable: configuration.codable ?? .codable,
                 mapping: discriminator.mapping.map {
                     let mapping = configuration.mapping?.firstWith(value: $0.value)
+                    let name = mapping?.name ?? naming.caseName($0.value)
                     return Relax.Source.Enumeration.Mapping(
                         value: $0.value,
-                        name: mapping?.name ?? $0.value.firstCharacterLowercased // TODO: ...
+                        name: name
                     )
                 }
             )
@@ -137,5 +138,16 @@ extension [Relax.Source.Discriminator] {
         filter {
             $0.schemaName == schemaName
         }.only
+    }
+}
+
+extension [Relax.Source.Discriminator.Mapping] {
+    var uniqueSchemaNames: [String] {
+        map(\.schemaName)
+            .reduce(into: []) { result, schemaName in
+                if !result.contains(schemaName) {
+                    result.append(schemaName)
+                }
+            }
     }
 }

@@ -81,11 +81,15 @@ public struct RelaxMain {
             platform: command.platform
         )
 
-        let schemas = Relax.Schema.Schemas(document: documents.first!)
+        let schemas = Relax.Schema.Schemas(
+            document: documents.first!,
+            naming: platform.naming
+        )
 
         sources = Relax.Source.Sources(
             configurations: configurations,
-            schemas: schemas
+            schemas: schemas,
+            platform: platform
         )
     }
 
@@ -131,12 +135,12 @@ public struct RelaxMain {
             switch platform {
             case let .kotlin(framework):
                 let source = KotlinSource()
-                source.appendDiscriminator(discriminator, framework, filename: filename, includeGeneratedComment: !oneTime)
+                source.appendDiscriminator(discriminator, sources, framework, filename: filename, includeGeneratedComment: !oneTime)
                 let sourceFile = SourceFile(filename, at: path)
                 sourceFile.write(source.source)
             case .swift:
                 let source = SwiftSource()
-                source.appendDiscriminator(discriminator, filename: filename, includeGeneratedComment: !oneTime)
+                source.appendDiscriminator(discriminator, sources, filename: filename, includeGeneratedComment: !oneTime, naming: platform.naming)
                 let sourceFile = SourceFile(filename, at: path)
                 sourceFile.write(source.source)
             }
@@ -174,7 +178,7 @@ public struct RelaxMain {
                 sourceFile.write(source.source)
             case .swift:
                 let source = SwiftSource()
-                source.appendStructure(structure, sources, filename: filename, includeGeneratedComment: !oneTime)
+                source.appendStructure(structure, sources, filename: filename, includeGeneratedComment: !oneTime, naming: platform.naming)
                 let sourceFile = SourceFile(filename, at: path)
                 sourceFile.write(source.source)
             }

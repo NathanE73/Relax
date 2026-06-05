@@ -55,7 +55,7 @@ extension KotlinSource {
             append("enum class \(enumeration.name) {")
             indent {
                 for mapping in enumeration.mapping {
-                    let mappingName = KotlinNaming.escapeKeyword(KotlinNaming.name(from: mapping.name))
+                    let mappingName = escapeKeyword(mapping.name)
                     if mappingName != mapping.value {
                         importPackage("kotlinx.serialization.SerialName")
                         append("@SerialName(\"\(mapping.value)\")")
@@ -74,7 +74,7 @@ extension KotlinSource {
             append("enum class \(enumeration.name)(val label: String) {")
             indent {
                 for mapping in enumeration.mapping {
-                    let mappingName = KotlinNaming.escapeKeyword(KotlinNaming.caseName(from: mapping.name))
+                    let mappingName = escapeKeyword(mapping.name)
                     importPackage("com.squareup.moshi.Json")
                     append("@Json(name = \"\(mapping.value)\")")
                     append("\(mappingName)(\"\(mapping.value)\"),")
@@ -92,8 +92,7 @@ extension KotlinSource {
 extension Relax.Source.Enumeration {
     var requiresSerialNameImport: Bool {
         !mapping.allSatisfy { mapping in
-            let caseName = KotlinNaming.escapeKeyword(KotlinNaming.name(from: mapping.name))
-            return mapping.value == caseName
+            mapping.value == mapping.name
         }
     }
 }

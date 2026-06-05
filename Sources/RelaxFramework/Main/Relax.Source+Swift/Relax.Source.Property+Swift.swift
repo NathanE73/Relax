@@ -35,7 +35,7 @@ extension SwiftSource {
             switch property.type {
             case let .schema(schema):
                 let type = schema.name
-                let objectValue = SwiftNaming.escapeKeyword(value)
+                let objectValue = escapeKeyword(value)
                 append("let \(property.name) = \(type).\(objectValue)")
             case .stock(.string):
                 append("let \(property.name) = \"\(value)\"")

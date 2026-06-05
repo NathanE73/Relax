@@ -25,7 +25,7 @@
 import Foundation
 
 extension Relax.Source {
-    struct Property {
+    struct Property: Equatable {
         var name: String
         var type: PropertyType
         var collectionType: CollectionType?

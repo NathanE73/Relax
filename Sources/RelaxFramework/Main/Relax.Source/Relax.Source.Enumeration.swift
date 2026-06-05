@@ -25,7 +25,7 @@
 import Foundation
 
 extension Relax.Source {
-    struct Enumeration {
+    struct Enumeration: FullyQualifiedName {
         var existing: Bool
 
         var schemaName: String?
@@ -45,7 +45,8 @@ extension Relax.Source {
 extension Relax.Source.Enumeration {
     init?(
         configuration: Relax.Configuration.Enumeration?,
-        schema: Relax.Schema.Enumeration
+        schema: Relax.Schema.Enumeration,
+        naming: SourceNaming
     ) {
         self.init(
             existing: configuration?.existing ?? false,
@@ -55,9 +56,10 @@ extension Relax.Source.Enumeration {
             codable: configuration?.codable ?? .codable,
             mapping: schema.values.map { value in
                 let mapping = configuration?.mapping.firstWith(value: value)
+                let name = mapping?.name ?? naming.caseName(value)
                 return Mapping(
                     value: value,
-                    name: mapping?.name ?? SwiftNaming.methodName(from: value)
+                    name: name
                 )
             }
         )
@@ -65,7 +67,8 @@ extension Relax.Source.Enumeration {
 
     init?(
         configuration: Relax.Configuration.Enumeration,
-        schema: Relax.Schema.Structure
+        schema: Relax.Schema.Structure,
+        naming: SourceNaming
     ) {
         guard let propertyName = configuration.propertyName else { return nil }
 
@@ -81,12 +84,21 @@ extension Relax.Source.Enumeration {
             codable: configuration.codable ?? .codable,
             mapping: enumeration.mapping.map {
                 let mapping = configuration.mapping.firstWith(value: $0.value)
+                let name = mapping?.name ?? naming.methodName($0.value)
                 return Mapping(
                     value: $0.value,
-                    name: mapping?.name ?? SwiftNaming.methodName(from: $0.value)
+                    name: name
                 )
             }
         )
+    }
+}
+
+extension Relax.Source.Enumeration {
+    func name(forValue value: String?) -> String? {
+        mapping.filter {
+            $0.value == value
+        }.only?.name
     }
 }
 
